@@ -28,7 +28,8 @@ of being created.
 - **CI**: GitHub Actions running `pnpm check` and validating pull request titles; every action is
   pinned to a commit SHA.
 - **Releases**: release-please (manifest mode) opens release pull requests with a generated
-  changelog on `main`.
+  changelog on `main`, starting at `0.1.0`; after each release, `main` is back-merged into
+  `staging` automatically.
 - **Dependency updates**: Dependabot, grouped and targeting `staging`, with exact version pins.
 - **Repository rules as code**: rulesets for `staging`, `demo` and `main` in `.github/rulesets/`,
   applied with one script along with merge settings, description, topics and private
@@ -82,8 +83,8 @@ Actions secret. Without them the step is skipped and the release workflow fails 
    scripts/setup-repo.sh            # add --dry-run to preview every API call
    ```
 
-   It creates the `staging` and `demo` branches, applies the rulesets, sets merge settings,
-   description and topics (from `.github/repository.json`), allows GitHub Actions to open pull
+   It creates the `staging` and `demo` branches, applies the rulesets, sets merge settings
+   (including auto-merge, used by the release back-merge), description and topics (from `.github/repository.json`), allows GitHub Actions to open pull
    requests, enables private vulnerability reporting and, when the two `RELEASE_APP_*` variables
    are set, stores the release App credentials. It is safe to run again. Options:
    `--repo <owner/name>` to target another repository, `--template` to mark it as a template.
@@ -161,6 +162,8 @@ gitGraph
 - Direct pushes, force pushes and branch deletion are blocked on all three branches, for
   administrators too.
 - Merging requires the `check` and `pr-title` status checks to pass.
+- After each release, the release workflow opens `chore: back-merge main into staging` and lets it
+  merge itself (squash) once the checks pass, so the release commit reaches `staging`.
 
 ## Personal tooling
 

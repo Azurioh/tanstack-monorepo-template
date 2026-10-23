@@ -58,8 +58,11 @@ feat(web)!: drop support for the legacy session cookie
 chore: promote staging to demo
 ```
 
-The type drives the release: `fix` produces a patch release, `feat` a minor release, and `!` or a
-`BREAKING CHANGE:` footer a major release.
+The type drives the release. From `1.0.0` on, `fix` produces a patch release, `feat` a minor
+release, and `!` or a `BREAKING CHANGE:` footer a major release. Before `1.0.0` (the first release
+is `0.1.0`), a breaking change produces a minor release instead of a major one; `feat` and `fix`
+behave as above. Leaving `0.x` is a deliberate step (see
+[ADR 0005](./docs/adr/0005-dependency-versioning-and-releases.md)).
 
 ## Dependencies
 
@@ -83,6 +86,9 @@ feature branch --squash--> staging --merge commit--> demo --merge commit--> main
 - release-please opens a release pull request on `main` as the release GitHub App, so the
   required checks run on it like on any other pull request; merging it tags the release and
   updates `CHANGELOG.md`. Never edit `CHANGELOG.md` by hand.
+- After each release, the release workflow opens a `chore: back-merge main into staging` pull
+  request and enables auto-merge (squash) on it, so the release commit reaches `staging` without a
+  manual step.
 
 The full rationale is in [ADR 0006](./docs/adr/0006-branch-flow-and-repository-rules.md).
 

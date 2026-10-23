@@ -48,10 +48,12 @@ A failed precondition prints `error: <reason>` to stderr and exits `1` with no c
 | 7 | Release App credentials (only when both env vars are set, else `skip`) | `gh variable set RELEASE_APP_CLIENT_ID`, `gh secret set RELEASE_APP_PRIVATE_KEY` | overwrites the stored values |
 
 Step 3 payload: `allow_squash_merge=true`, `allow_merge_commit=true`, `allow_rebase_merge=false`,
-`squash_merge_commit_title=PR_TITLE`, `squash_merge_commit_message=PR_BODY`,
-`merge_commit_title=PR_TITLE`, `merge_commit_message=PR_BODY`, `delete_branch_on_merge=true`,
-`description`, and `is_template=true` with `--template`. Which method each branch accepts is
-enforced by the rulesets, not by repository settings.
+`allow_auto_merge=true`, `squash_merge_commit_title=PR_TITLE`,
+`squash_merge_commit_message=PR_BODY`, `merge_commit_title=PR_TITLE`,
+`merge_commit_message=PR_BODY`, `delete_branch_on_merge=true`, `description`, and
+`is_template=true` with `--template`. Auto-merge lets the release workflow's back-merge pull
+request (`main → staging`) merge itself once its required checks pass. Which method each branch
+accepts is enforced by the rulesets, not by repository settings.
 
 Rulesets are applied after branches exist (step 1 before 2) so `demo`/`staging` are protected from
 creation onward.
