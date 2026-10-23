@@ -37,6 +37,16 @@ feature/* --squash--> staging --merge commit--> demo --merge commit--> main
   branches diverge and the next promotion conflicts or re-applies changes. Rebase merges are
   rejected for the same reason: GitHub rewrites the commit SHAs.
 
+**Back-merge after a release**
+- Merging the release pull request adds a commit to `main` (version bump and `CHANGELOG.md`) that
+  does not exist on `staging`. Left there, the next promotion carries a stale version and
+  changelog upstream and conflicts on those files.
+- After each release, `.github/workflows/release-please.yml` uses the release App token to open a
+  `chore: back-merge main into staging` pull request (unless one is already open) and enables
+  auto-merge on it. It merges once `check` and `pr-title` pass, like any other pull request.
+- The back-merge is **squash-merged**: the `staging` ruleset accepts only squash merges with a
+  linear history, and the workflow follows the ruleset rather than working around it.
+
 **Rulesets as code**
 - One ruleset per branch in `.github/rulesets/` (`staging.json`, `demo.json`, `main.json`), in the
   GitHub REST format, so they can also be imported through the GitHub UI.
@@ -51,8 +61,8 @@ feature/* --squash--> staging --merge commit--> demo --merge commit--> main
   request. Teams raise `required_approving_review_count` in the ruleset files.
 - `scripts/setup-repo.sh [--repo owner/name] [--template] [--dry-run]` applies everything once
   after a repository is created: it creates `staging` and `demo`, upserts the rulesets by name,
-  sets merge settings (squash and merge commit on, rebase off, pull request title as commit title,
-  branch deletion on merge), sets description and topics from `.github/repository.json`, allows
+  sets merge settings (squash and merge commit on, rebase off, auto-merge on, pull request title as
+  commit title, branch deletion on merge), sets description and topics from `.github/repository.json`, allows
   GitHub Actions to create pull requests, and enables private vulnerability reporting. It is
   idempotent.
 
@@ -64,11 +74,22 @@ feature/* --squash--> staging --merge commit--> demo --merge commit--> main
   restricting merge methods per branch.
 - An administrator bypass: rejected, it lets a red pull request through and relies on a role
   identifier that differs between accounts.
+- A ruleset bypass for the release App, so it could push the release commit to `staging` directly
+  or back-merge with a merge commit: rejected, protected branches have no bypass actors (see
+  above), and a bypass for an automated actor is a bypass all the same.
+- No back-merge, letting the release commit travel only with the next release pull request:
+  rejected, the next promotion then conflicts on the version files and `CHANGELOG.md`.
 
 ## Consequences
 
 - Every generated project is protected minutes after creation by running one script.
 - `main` history shows merge commits for promotions; `staging` stays linear.
+- Because back-merges are squashed, `main` and `staging` have different commit histories after a
+  release while their content is identical. This is harmless: the next promotion merges cleanly
+  since the release changes already exist on `staging`, and release-please reads commits since
+  the last release tag on `main`, so the squashed back-merge (`chore:`) adds no changelog entry.
+- Back-merges need auto-merge enabled on the repository (`scripts/setup-repo.sh` step 3); without
+  it the workflow step fails and the pull request must be merged by hand.
 - Hotfixes follow the same path (`staging → demo → main`); there is no shortcut by design.
 - Ruleset availability on public personal repositories is documented by GitHub and verified on a
   throwaway repository before the first release.

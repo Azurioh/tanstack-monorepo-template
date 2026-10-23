@@ -39,6 +39,18 @@ pins need an automated update channel, and automated releases need a machine-rea
   `.release-please-manifest.json`). It opens a release pull request that bumps versions and writes
   `CHANGELOG.md` from the Conventional Commits; merging it tags the release. Manifest mode lets
   each app added later get its own entry without changing the workflow.
+- After each release, `main` is back-merged into `staging` automatically (see ADR 0006).
+
+**0.x versioning**
+- The first release is `0.1.0`, not `1.0.0`. The manifest starts at `0.0.0`, which release-please
+  treats as "never released", so it would otherwise use its default first version, `1.0.0`;
+  `initial-version: "0.1.0"` in `release-please-config.json` sets it instead. It applies only while
+  no release exists, so it needs no removal afterwards (unlike `release-as`, which pins every
+  later release until removed).
+- While the version is below `1.0.0`, `bump-minor-pre-major` turns a breaking change into a minor
+  release instead of `1.0.0`; `feat` still produces a minor release and `fix` a patch release.
+- Leaving `0.x` is a deliberate decision: a `Release-As: 1.0.0` footer on a commit, or `release-as`
+  set for one release and removed afterwards.
 
 **Release token**
 - release-please authenticates with a GitHub App installation token created in the workflow by
@@ -66,6 +78,7 @@ pins need an automated update channel, and automated releases need a machine-rea
 
 - Upgrades are visible, reviewable pull requests that run the full CI suite on `staging`.
 - Changelogs and version numbers require no manual work, provided commit titles stay Conventional.
+- A template-derived project signals pre-stable status with `0.x` until it chooses `1.0.0`.
 - Each repository needs the release App installed and its credentials stored once
   (`scripts/setup-repo.sh` step 7); without them the release workflow fails.
 - **Open risk**: Dependabot support for pnpm 12 lockfiles is not confirmed by its documentation.

@@ -254,6 +254,7 @@ update_settings() {
     allow_squash_merge: true,
     allow_merge_commit: true,
     allow_rebase_merge: false,
+    allow_auto_merge: true,
     squash_merge_commit_title: "PR_TITLE",
     squash_merge_commit_message: "PR_BODY",
     merge_commit_title: "PR_TITLE",
