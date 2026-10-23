@@ -1,0 +1,60 @@
+name: Bug report
+description: Report something that does not work as documented.
+title: "fix: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. For a security problem, do not use this form:
+        open the **Security** tab and choose **Report a vulnerability** instead.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened, and what did you expect to happen instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: The exact commands or actions that trigger the bug.
+      placeholder: |
+        1. pnpm install
+        2. pnpm check
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Error messages or logs. This is rendered as code, no backticks needed.
+      render: shell
+    validations:
+      required: false
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js version
+      description: Output of `node --version`.
+      placeholder: v24.22.1
+    validations:
+      required: true
+  - type: input
+    id: pnpm-version
+    attributes:
+      label: pnpm version
+      description: Output of `pnpm --version`.
+      placeholder: 12.15.0
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: macOS 26, Ubuntu 24.04, Windows 11
+    validations:
+      required: true

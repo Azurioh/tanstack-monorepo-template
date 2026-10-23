@@ -1,0 +1,13 @@
+{
+  "description": "TanStack Start monorepo template: pnpm workspaces, Turborepo, Biome, strict TypeScript, Conventional Commits and versioned repository rules.",
+  "topics": [
+    "tanstack-start",
+    "monorepo",
+    "turborepo",
+    "pnpm",
+    "template",
+    "typescript",
+    "biome",
+    "react"
+  ]
+}

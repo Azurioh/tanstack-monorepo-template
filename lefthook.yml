@@ -1,0 +1,10 @@
+pre-commit:
+  commands:
+    biome:
+      run: pnpm exec biome check --write --staged --no-errors-on-unmatched --error-on-warnings
+      stage_fixed: true
+
+commit-msg:
+  commands:
+    commitlint:
+      run: pnpm exec commitlint --edit {1}
