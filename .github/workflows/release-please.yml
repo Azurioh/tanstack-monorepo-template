@@ -26,8 +26,27 @@ jobs:
           permission-issues: write
 
       - name: Release Please
+        id: release
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
           token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+      # The release commit lands on main only (merge commit from the release pull request), so it is
+      # brought back to staging; otherwise the next promotion would conflict on CHANGELOG.md and the
+      # version files. staging accepts squash merges only (ADR 0006).
+      - name: Back-merge main into staging
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          number="$(gh pr list --repo "$REPO" --head main --base staging --state open --json number --jq '.[0].number // empty')"
+          if [[ -z "$number" ]]; then
+            url="$(gh pr create --repo "$REPO" --head main --base staging \
+              --title 'chore: back-merge main into staging' \
+              --body 'Brings the release commit from main back into staging. Opened automatically after a release; merges itself once the required checks pass.')"
+            number="${url##*/}"
+          fi
+          gh pr merge "$number" --repo "$REPO" --auto --squash
