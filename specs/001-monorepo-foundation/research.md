@@ -79,6 +79,10 @@ time (constitution IV) and update the pins if a newer stable release exists.
   (`release-please-config.json` + `.release-please-manifest.json`), single root package,
   `release-type: node`, running on push to `main`; workflow permissions `contents: write`,
   `pull-requests: write`.
+- Update: release-please uses a GitHub App installation token from
+  `actions/create-github-app-token@v3.3.0` (`client-id` input; `app-id` is deprecated) and the job
+  keeps `contents: read`, because pull requests opened with `GITHUB_TOKEN` do not trigger the
+  required checks (ADR 0005).
 - Rationale: changelog derived from Conventional Commits; manifest mode lets spec 2 add one entry
   per app without changing the workflow.
 - Alternatives considered: Changesets (rejected in intake: extra contributor step, designed for
