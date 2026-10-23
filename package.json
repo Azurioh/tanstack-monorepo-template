@@ -25,5 +25,6 @@
     "typecheck": "tsc --noEmit",
     "knip": "knip",
     "prepare": "lefthook install"
-  }
+  },
+  "version": "1.0.0"
 }
