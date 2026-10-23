@@ -40,6 +40,16 @@ pins need an automated update channel, and automated releases need a machine-rea
   `CHANGELOG.md` from the Conventional Commits; merging it tags the release. Manifest mode lets
   each app added later get its own entry without changing the workflow.
 
+**Release token**
+- release-please authenticates with a GitHub App installation token created in the workflow by
+  `actions/create-github-app-token` from the `RELEASE_APP_CLIENT_ID` variable and the
+  `RELEASE_APP_PRIVATE_KEY` secret; the workflow's own `GITHUB_TOKEN` is read-only.
+- Why: a pull request opened with `GITHUB_TOKEN` does not trigger workflows (GitHub's guard
+  against recursive runs). The `check` and `pr-title` checks required by the `main` ruleset never
+  run on it, so the release pull request can never be merged. A pull request opened by an App
+  triggers workflows normally.
+- The token is scoped to Contents, Pull requests and Issues (labels), all read and write.
+
 ## Alternatives considered
 
 - Version ranges with a lockfile: rejected, the manifest no longer says which version runs.
@@ -47,11 +57,17 @@ pins need an automated update channel, and automated releases need a machine-rea
   Dependabot is native and needs no setup step.
 - Changesets: rejected, it adds a manual step to every contribution and is designed for publishing
   npm packages, which this repository does not do.
+- Release token as a fine-grained personal access token: rejected, it expires and is tied to one
+  person's account, so releases stop when it lapses or that person leaves.
+- Keeping `GITHUB_TOKEN` and closing then reopening the release pull request to trigger the
+  checks: rejected, a manual step on every release that is easy to forget.
 
 ## Consequences
 
 - Upgrades are visible, reviewable pull requests that run the full CI suite on `staging`.
 - Changelogs and version numbers require no manual work, provided commit titles stay Conventional.
+- Each repository needs the release App installed and its credentials stored once
+  (`scripts/setup-repo.sh` step 7); without them the release workflow fails.
 - **Open risk**: Dependabot support for pnpm 12 lockfiles is not confirmed by its documentation.
   It is verified on the first live scheduled run. If Dependabot cannot parse or update the
   lockfile, the fallback is Renovate, which supports pnpm workspaces, configured with the same
