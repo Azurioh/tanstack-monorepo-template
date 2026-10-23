@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Applies the versioned repository rules (.github/rulesets, .github/repository.json) to a GitHub
 # repository: promotion branches, rulesets, merge settings, topics, Actions permissions and private
-# vulnerability reporting. Idempotent; see specs/001-monorepo-foundation/contracts/setup-repo.md.
+# vulnerability reporting, plus the release GitHub App credentials when provided. Idempotent; see specs/001-monorepo-foundation/contracts/setup-repo.md.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -17,6 +17,7 @@ api_out=""
 api_err=""
 err_file=""
 main_sha=""
+release_app=false
 
 usage() {
   cat <<'EOF'
@@ -29,6 +30,12 @@ Options:
   --template           also mark the repository as a template (is_template=true)
   --dry-run            print every API call that would change something, change nothing
   -h, --help           show this help
+
+Environment (optional, set both or neither):
+  RELEASE_APP_CLIENT_ID         client ID of the release GitHub App, stored as the
+                                RELEASE_APP_CLIENT_ID Actions variable
+  RELEASE_APP_PRIVATE_KEY_FILE  path to the App's private key (.pem), stored as the
+                                RELEASE_APP_PRIVATE_KEY Actions secret
 
 Exit codes: 0 success, 1 precondition or step failure, 2 invalid arguments.
 EOF
@@ -173,6 +180,22 @@ check_preconditions() {
     die "branch main does not exist on ${repo}"
   fi
   main_sha="$(jq -r '.object.sha' <<<"$api_out")"
+  check_release_app_env
+}
+
+# The release App credentials are optional, but a half-configured pair is a mistake.
+check_release_app_env() {
+  local client_id="${RELEASE_APP_CLIENT_ID-}" key_file="${RELEASE_APP_PRIVATE_KEY_FILE-}"
+  if [[ -z "$client_id" && -z "$key_file" ]]; then
+    return 0
+  fi
+  if [[ -z "$client_id" || -z "$key_file" ]]; then
+    die "set both RELEASE_APP_CLIENT_ID and RELEASE_APP_PRIVATE_KEY_FILE, or neither"
+  fi
+  if [[ ! -f "$key_file" || ! -r "$key_file" ]]; then
+    die "RELEASE_APP_PRIVATE_KEY_FILE '${key_file}' is not a readable file"
+  fi
+  release_app=true
 }
 
 # Step 1: create the promotion branches from main HEAD when missing.
@@ -275,6 +298,28 @@ enable_vulnerability_reporting() {
   fi
 }
 
+# Step 7: client ID and private key of the GitHub App that release-please acts as.
+set_release_app_credentials() {
+  if [[ "$release_app" != true ]]; then
+    printf 'skip release app credentials (RELEASE_APP_CLIENT_ID / RELEASE_APP_PRIVATE_KEY_FILE not set)\n'
+    return 0
+  fi
+  if [[ "$dry_run" == true ]]; then
+    printf 'dry-run: gh variable set RELEASE_APP_CLIENT_ID --repo %s\n' "$repo"
+    printf 'dry-run: gh secret set RELEASE_APP_PRIVATE_KEY --repo %s < %s\n' "$repo" "$RELEASE_APP_PRIVATE_KEY_FILE"
+    return 0
+  fi
+  if ! gh variable set RELEASE_APP_CLIENT_ID --repo "$repo" --body "$RELEASE_APP_CLIENT_ID" >/dev/null 2>"$err_file"; then
+    printf 'fail release app credentials: %s\n' "$(tr '\n' ' ' <"$err_file")"
+    exit 1
+  fi
+  if ! gh secret set RELEASE_APP_PRIVATE_KEY --repo "$repo" <"$RELEASE_APP_PRIVATE_KEY_FILE" >/dev/null 2>"$err_file"; then
+    printf 'fail release app credentials: %s\n' "$(tr '\n' ' ' <"$err_file")"
+    exit 1
+  fi
+  step_ok "release app credentials"
+}
+
 main() {
   parse_args "$@"
   err_file="$(mktemp)"
@@ -289,6 +334,7 @@ main() {
   update_topics
   update_actions_permissions
   enable_vulnerability_reporting
+  set_release_app_credentials
   printf 'done: %s\n' "$repo"
 }
 
