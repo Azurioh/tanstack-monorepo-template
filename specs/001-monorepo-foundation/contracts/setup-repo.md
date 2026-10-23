@@ -14,6 +14,13 @@ scripts/setup-repo.sh [--repo <owner/name>] [--template] [--dry-run]
 | `--template` | off | also sets `is_template=true` (used on the template repository itself) |
 | `--dry-run` | off | prints every API call it would make, changes nothing |
 
+| Environment variable | Effect |
+|---|---|
+| `RELEASE_APP_CLIENT_ID` | client ID of the release GitHub App, stored as the `RELEASE_APP_CLIENT_ID` Actions variable |
+| `RELEASE_APP_PRIVATE_KEY_FILE` | path to the App's private key, stored as the `RELEASE_APP_PRIVATE_KEY` Actions secret |
+
+Both are optional but must be set together.
+
 Description and topics are read from `.github/repository.json`
 (`{ "description": "...", "topics": ["..."] }`) so each generated project edits data, not the script.
 
@@ -23,6 +30,8 @@ Description and topics are read from `.github/repository.json`
 2. Target repository exists and the token has `permissions.admin == true`.
 3. Branch `main` exists.
 4. Every `.github/rulesets/*.json` parses as JSON (`jq`).
+5. `RELEASE_APP_CLIENT_ID` and `RELEASE_APP_PRIVATE_KEY_FILE` are both set or both unset; when set,
+   the key file exists and is readable.
 
 A failed precondition prints `error: <reason>` to stderr and exits `1` with no change made.
 
@@ -36,6 +45,7 @@ A failed precondition prints `error: <reason>` to stderr and exits `1` with no c
 | 4 | Topics | `PUT /repos/{o}/{r}/topics` | full replace |
 | 5 | Actions may create PRs | `PUT /repos/{o}/{r}/actions/permissions/workflow` | PUT is idempotent |
 | 6 | Private vulnerability reporting | `PUT /repos/{o}/{r}/private-vulnerability-reporting` | PUT is idempotent |
+| 7 | Release App credentials (only when both env vars are set, else `skip`) | `gh variable set RELEASE_APP_CLIENT_ID`, `gh secret set RELEASE_APP_PRIVATE_KEY` | overwrites the stored values |
 
 Step 3 payload: `allow_squash_merge=true`, `allow_merge_commit=true`, `allow_rebase_merge=false`,
 `squash_merge_commit_title=PR_TITLE`, `squash_merge_commit_message=PR_BODY`,

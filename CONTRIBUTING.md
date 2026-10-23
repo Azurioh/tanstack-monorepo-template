@@ -80,8 +80,9 @@ feature branch --squash--> staging --merge commit--> demo --merge commit--> main
   so it must be a valid Conventional Commit.
 - Maintainers promote `staging` to `demo` and `demo` to `main` with merge commits. Promotions are
   never squashed: that would collapse the changelog into one entry and make the branches diverge.
-- release-please opens a release pull request on `main`; merging it tags the release and updates
-  `CHANGELOG.md`. Never edit `CHANGELOG.md` by hand.
+- release-please opens a release pull request on `main` as the release GitHub App, so the
+  required checks run on it like on any other pull request; merging it tags the release and
+  updates `CHANGELOG.md`. Never edit `CHANGELOG.md` by hand.
 
 The full rationale is in [ADR 0006](./docs/adr/0006-branch-flow-and-repository-rules.md).
 

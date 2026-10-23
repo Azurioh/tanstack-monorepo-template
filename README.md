@@ -46,6 +46,33 @@ task.
 
 Prerequisites: Node.js 24 (see `.node-version`) with Corepack enabled (`corepack enable`), the
 GitHub CLI (`gh`) authenticated with admin rights on the new repository, and `jq`.
+
+### Release GitHub App (one-time)
+
+release-please opens its release pull requests as a GitHub App. A pull request opened with the
+default `GITHUB_TOKEN` does not trigger workflows, so its required checks never run and it can
+never be merged. Create the App once and reuse it for every repository generated from the template:
+1. In **Settings → Developer settings → GitHub Apps → New GitHub App** (under your user account),
+   name it, set any homepage URL and uncheck **Webhook → Active**.
+2. Grant these **repository permissions**, nothing else:
+   - Contents: Read and write
+   - Pull requests: Read and write
+   - Issues: Read and write (release-please manages its labels through the Issues API)
+   - Metadata: Read-only (mandatory)
+3. Create it, note its **Client ID**, then **Generate a private key** and keep the `.pem` file.
+4. **Install App** on all repositories, or only on the repositories generated from the template.
+
+Then pass both values to the setup script in step 2:
+
+```bash
+RELEASE_APP_CLIENT_ID=<client-id> RELEASE_APP_PRIVATE_KEY_FILE=<path/to/key.pem> scripts/setup-repo.sh
+```
+
+It stores them as the `RELEASE_APP_CLIENT_ID` Actions variable and the `RELEASE_APP_PRIVATE_KEY`
+Actions secret. Without them the step is skipped and the release workflow fails until they are set.
+
+### Steps
+
 1. **Create a repository from the template**: click **Use this template** on GitHub, or run
    `gh repo create <owner>/<name> --public --template azurioh/tanstack-monorepo-template --clone`.
 2. **Configure the repository** (first step after creating it, GitHub does not copy settings from
@@ -57,7 +84,8 @@ GitHub CLI (`gh`) authenticated with admin rights on the new repository, and `jq
 
    It creates the `staging` and `demo` branches, applies the rulesets, sets merge settings,
    description and topics (from `.github/repository.json`), allows GitHub Actions to open pull
-   requests and enables private vulnerability reporting. It is safe to run again. Options:
+   requests, enables private vulnerability reporting and, when the two `RELEASE_APP_*` variables
+   are set, stores the release App credentials. It is safe to run again. Options:
    `--repo <owner/name>` to target another repository, `--template` to mark it as a template.
 3. **Install dependencies** (also installs the git hooks):
 
