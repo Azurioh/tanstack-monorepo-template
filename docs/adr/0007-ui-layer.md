@@ -21,7 +21,9 @@ test and to restyle.
   hook that owns state, data fetching and actions for that View and exposes exactly what the View
   needs. Views are tested by rendering them with plain props; ViewModels are tested without the
   DOM.
-- **TanStack Form** handles forms, with schema validation, in the ViewModel layer.
+- **Forms use zod and `useReducer`, no form library** (amended 2026-10-26, see Amendments). The
+  feature's zod schema is shared with the RPC procedure input; the ViewModel validates with it and
+  keeps the form state in a `useReducer`.
 - The first application (`apps/web`) implements this decision in spec 2; until then no UI code
   exists in the repository.
 
@@ -31,8 +33,9 @@ test and to restyle.
   Tailwind and its components cannot be edited in place.
 - Logic inside components: rejected, rendering and behaviour cannot be tested or replaced
   separately.
-- React Hook Form: rejected in favour of TanStack Form, which shares the type-safety approach of
-  the rest of the TanStack stack.
+- React Hook Form: rejected, a form library is not needed (see Amendments).
+- TanStack Form: chosen in the first version of this ADR, replaced by zod and `useReducer` (see
+  Amendments).
 
 ## Consequences
 
@@ -40,3 +43,22 @@ test and to restyle.
 - Projects own their component source and update shadcn/ui components deliberately, not through a
   dependency bump.
 - Each screen has two files (View and ViewModel) instead of one; accepted for testability.
+
+## Amendments
+
+### 2026-10-26: forms without a form library
+
+The first version of this ADR chose TanStack Form. Spec 2 replaces it, with the maintainer's
+agreement:
+
+- One zod schema per form lives in the feature's `schemas.ts` and is used both as the RPC
+  procedure input ([ADR 0011](./0011-rpc-transport.md)) and for client-side validation, so client
+  and server cannot disagree on a rule.
+- The ViewModel keeps the form state in a `useReducer` with an explicit status (`idle`,
+  `invalid`, `submitting`, `succeeded`, `failed`) and maps validation issues and server errors
+  to copy by business code.
+- No form library is a dependency. The demo form has one field; a library would add an API to
+  learn and a second validation path for no behaviour the reducer does not already give.
+
+Consequence: a large multi-step form may justify a form library later; adding one requires a
+superseding ADR.

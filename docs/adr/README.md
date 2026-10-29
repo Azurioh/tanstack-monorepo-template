@@ -5,24 +5,27 @@ Each long-term decision of this template is recorded here. The process itself is
 
 ## Index
 
-| Number                                               | Title                              | Status                                 | Applies to                                 |
-| ---------------------------------------------------- | ---------------------------------- | -------------------------------------- | ------------------------------------------ |
-| [0001](./0001-record-architecture-decisions.md)      | Record architecture decisions      | Accepted                               | whole repository                           |
-| [0002](./0002-monorepo-layout-and-tooling.md)        | Monorepo layout and tooling        | Accepted                               | whole repository                           |
-| [0003](./0003-clean-architecture.md)                 | Clean architecture                 | Accepted                               | `apps/*`, `packages/*`                     |
-| [0004](./0004-quality-gates.md)                      | Quality gates                      | Accepted                               | whole repository                           |
-| [0005](./0005-dependency-versioning-and-releases.md) | Dependency versioning and releases | Accepted                               | whole repository                           |
-| [0006](./0006-branch-flow-and-repository-rules.md)   | Branch flow and repository rules   | Accepted                               | whole repository                           |
-| [0007](./0007-ui-layer.md)                           | UI layer                           | Accepted                               | `apps/*`, shared UI packages               |
-| [0008](./0008-deployment.md)                         | Deployment                         | Accepted (not yet implemented, spec 3) | `apps/*`, `.github/workflows/`             |
-| [0009](./0009-per-pr-previews.md)                    | Opt-in per-pull-request previews   | Accepted (not yet implemented, spec 3) | `apps/*`, `.github/workflows/`, deployment |
+| Number                                                    | Title                                   | Status                                 | Applies to                                            |
+| --------------------------------------------------------- | --------------------------------------- | -------------------------------------- | ----------------------------------------------------- |
+| [0001](./0001-record-architecture-decisions.md)           | Record architecture decisions           | Accepted                               | whole repository                                      |
+| [0002](./0002-monorepo-layout-and-tooling.md)             | Monorepo layout and tooling             | Accepted                               | whole repository                                      |
+| [0003](./0003-clean-architecture.md)                      | Clean architecture                      | Accepted                               | `apps/*`, `packages/*`                                |
+| [0004](./0004-quality-gates.md)                           | Quality gates                           | Accepted                               | whole repository                                      |
+| [0005](./0005-dependency-versioning-and-releases.md)      | Dependency versioning and releases      | Accepted                               | whole repository                                      |
+| [0006](./0006-branch-flow-and-repository-rules.md)        | Branch flow and repository rules        | Accepted                               | whole repository                                      |
+| [0007](./0007-ui-layer.md)                                | UI layer                                | Accepted (amended 2026-10-26)          | `apps/*`, shared UI packages                          |
+| [0008](./0008-deployment.md)                              | Deployment                              | Accepted (not yet implemented, spec 3) | `apps/*`, `.github/workflows/`                        |
+| [0009](./0009-per-pr-previews.md)                         | Opt-in per-pull-request previews        | Accepted (not yet implemented, spec 3) | `apps/*`, `.github/workflows/`, deployment            |
+| [0010](./0010-app-layout-and-architecture-enforcement.md) | App layout and architecture enforcement | Accepted                               | `apps/*`, `biome.jsonc`, `scripts/biome/`             |
+| [0011](./0011-rpc-transport.md)                           | RPC transport                           | Accepted                               | `apps/*`, `src/shared/server/rpc/`, `src/routes/api/` |
 
 ## By scope
 
 - **Process**: [0001](./0001-record-architecture-decisions.md)
 - **Workspace and tooling**: [0002](./0002-monorepo-layout-and-tooling.md),
   [0004](./0004-quality-gates.md), [0005](./0005-dependency-versioning-and-releases.md)
-- **Code architecture**: [0003](./0003-clean-architecture.md), [0007](./0007-ui-layer.md)
+- **Code architecture**: [0003](./0003-clean-architecture.md), [0007](./0007-ui-layer.md),
+  [0010](./0010-app-layout-and-architecture-enforcement.md), [0011](./0011-rpc-transport.md)
 - **Repository and workflow**: [0005](./0005-dependency-versioning-and-releases.md),
   [0006](./0006-branch-flow-and-repository-rules.md)
 - **Delivery**: [0008](./0008-deployment.md), [0009](./0009-per-pr-previews.md)

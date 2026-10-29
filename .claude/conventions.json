@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azurioh/claude-conventions/main/schema/conventions.schema.json",
+  "integrationBranch": "staging",
+  "productionBranch": "main",
+  "packageManager": "pnpm",
+  "formatter": "biome",
+  "prSize": {
+    "lines": 400,
+    "files": 15,
+    "exclude": [
+      "**/pnpm-lock.yaml",
+      "specs/**",
+      "**/routeTree.gen.ts"
+    ],
+    "label": "large-pr"
+  },
+  "apps": {
+    "web": "apps/web"
+  },
+  "adrDir": "docs/adr",
+  "deployNote": "reached from `staging` through `demo` by merge-commit promotion PRs, ADR 0006; release-please runs there"
+}

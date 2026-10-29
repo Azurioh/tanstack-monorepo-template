@@ -40,6 +40,12 @@
           },
           {
             "context": "pr-title"
+          },
+          {
+            "context": "e2e"
+          },
+          {
+            "context": "agents-md"
           }
         ]
       }

@@ -25,11 +25,13 @@ of being created.
   checking, Vitest 5, knip 6. Zero errors and zero warnings, locally and in CI.
 - **Git hooks**: Lefthook runs Biome on staged files and commitlint (Conventional Commits) on each
   commit, installed automatically by `pnpm install`.
-- **CI**: GitHub Actions running `pnpm check` and validating pull request titles; every action is
-  pinned to a commit SHA.
+- **CI**: GitHub Actions running `pnpm check`, the end-to-end suite and the `AGENTS.md` drift
+  check, and validating pull request titles; every action is pinned to a commit SHA (see
+  [CI](#ci)).
 - **Releases**: release-please (manifest mode) opens release pull requests with a generated
-  changelog on `main`, starting at `0.1.0`; after each release, `main` is back-merged into
-  `staging` automatically.
+  changelog on `main`, starting at `0.1.0`, with a separate version and changelog for
+  `apps/web` (`apps/web/CHANGELOG.md`); after each release, `main` is back-merged into `staging`
+  automatically.
 - **Dependency updates**: Dependabot, grouped and targeting `staging`, with exact version pins.
 - **Repository rules as code**: rulesets for `staging`, `demo` and `main` in `.github/rulesets/`,
   applied with one script along with merge settings, description, topics and private
@@ -38,10 +40,12 @@ of being created.
   forms, pull request template, code owners.
 - **Architecture Decision Records**: [docs/adr](./docs/adr/README.md).
 
-The starter app (`apps/web`, TanStack Start with Tailwind CSS and shadcn/ui) arrives in spec 2.
-A project generator, anti-drift CI and container deployment (Docker, GHCR, Dokploy) arrive in
-spec 3. Until then `apps/` is empty and `packages/example` is a placeholder that exercises every
-task.
+- **Starter app**: `apps/web`, TanStack Start with oRPC, TanStack Query, Tailwind CSS and the
+  shared shadcn/ui package `packages/ui`, with a demo feature to copy and architecture rules
+  enforced by the linter (see [apps/web](#appsweb)).
+
+A project generator, anti-drift CI and container
+deployment (Docker, GHCR, Dokploy) arrive in spec 3.
 
 ## Quick start
 
@@ -104,7 +108,7 @@ Actions secret. Without them the step is skipped and the release workflow fails 
 
 | Script           | What it does                                                               |
 | ---------------- | -------------------------------------------------------------------------- |
-| `pnpm check`     | Full suite, same as CI: `turbo run lint typecheck test knip`               |
+| `pnpm check`     | Full suite, same as CI: `turbo run lint typecheck test knip build`         |
 | `pnpm lint`      | Biome lint and format check over the whole repository, warnings are errors |
 | `pnpm format`    | Biome safe fixes and formatting, written to disk                           |
 | `pnpm typecheck` | `tsc --noEmit` on root configuration files (packages have their own)       |
@@ -117,10 +121,11 @@ Each workspace package defines `typecheck` and `test` (and `build` when it emits
 
 ```text
 .
-├── apps/                      # deployable apps (starter app in spec 2)
+├── apps/
+│   └── web/                   # starter app: TanStack Start, oRPC, TanStack Query
 ├── packages/
 │   ├── tsconfig/              # @repo/tsconfig: shared strict TypeScript configuration
-│   └── example/               # @repo/example: placeholder package with a test
+│   └── ui/                    # @repo/ui: shadcn/ui components, cn helper, theme tokens
 ├── docs/adr/                  # Architecture Decision Records and their index
 ├── scripts/setup-repo.sh      # one-shot repository configuration
 ├── .github/
@@ -137,6 +142,144 @@ Each workspace package defines `typecheck` and `test` (and `build` when it emits
 ├── package.json · pnpm-workspace.yaml · pnpm-lock.yaml · .npmrc · .node-version
 └── README.md · LICENSE · CONTRIBUTING.md · CODE_OF_CONDUCT.md · SECURITY.md
 ```
+
+## apps/web
+
+The starter app: TanStack Start (SSR), oRPC for the API, TanStack Query on the client, Tailwind
+CSS and `@repo/ui`. It ships one demo feature, `greeting`, built to be copied.
+
+### Run
+
+```bash
+cp apps/web/.env.example apps/web/.env    # required: `start` exits, `dev` answers 500
+pnpm --filter web dev                     # dev server, prints its URL
+pnpm --filter web test                    # unit, contract and architecture tests
+pnpm --filter web exec playwright install chromium   # once per machine
+pnpm --filter web build && pnpm --filter web test:e2e
+```
+
+### Layout
+
+```text
+apps/web/src/
+├── features/<feature>/
+│   ├── server/{domain,application/ports,infrastructure,rpc}/
+│   ├── client/{api,hooks,components,pages}/, client/copy.ts
+│   ├── schemas.ts                # zod schemas shared by client and procedures
+│   ├── index.ts                  # client entry point (what routes import)
+│   ├── server.ts                 # server entry point (procedures, wiring factory)
+│   └── testing.ts                # test twins and builders
+├── shared/{domain,server,client}/
+│   └── server/composition-root.ts   # the only place ports are bound to adapters
+└── routes/                       # pages; routes/api/ holds server endpoints
+apps/web/tests/{unit,contracts,architecture,e2e}/
+```
+
+Each layer imports only itself and inner layers, a feature never imports another feature, client
+code imports server code type-only, vendor SDKs live in `server/infrastructure/`, and only
+`routes/api/` may import `shared/server/composition-root`. `pnpm lint` enforces every rule and
+names it (`ARCH-LAYER`, `ARCH-FEATURE`, …); see
+[ADR 0010](./docs/adr/0010-app-layout-and-architecture-enforcement.md). The rules match paths,
+never feature names, so a new feature needs no configuration change.
+
+### Add a feature by copying the demo
+
+The steps below create `farewell`; replace the name with yours.
+
+1. Copy the feature, its tests and its repository contract, rename files and identifiers, and add
+   a page route:
+
+   ```bash
+   cd apps/web
+   cp -R src/features/greeting src/features/farewell
+   cp -R tests/unit/features/greeting tests/unit/features/farewell
+   cp tests/contracts/greeting-repository.contract.ts tests/contracts/farewell-repository.contract.ts
+   find src/features/farewell tests/unit/features/farewell -depth -name '*greeting*' \
+     -execdir sh -c 'mv "$1" "$(echo "$1" | sed s/greeting/farewell/g)"' _ {} \;
+   find src/features/farewell tests/unit/features/farewell tests/contracts/farewell-repository.contract.ts \
+     -type f -exec perl -pi -e 's/greeting/farewell/g; s/Greeting/Farewell/g; s/GREETING/FAREWELL/g' {} +
+   sed -e 's/greeting/farewell/g; s/Greeting/Farewell/g; s#createFileRoute("/")#createFileRoute("/farewell")#' \
+     src/routes/index.tsx > src/routes/farewell.tsx
+   cd ../..
+   ```
+
+2. Register the procedures in `apps/web/src/shared/server/rpc/router.ts`:
+
+   ```ts
+   import { createFarewellProcedures, type FarewellUseCases } from "@/features/farewell/server";
+   // in RouterDependencies:
+   farewell: FarewellUseCases;
+   // in the object createRouter returns:
+   farewell: createFarewellProcedures(deps.farewell),
+   ```
+
+3. Wire the use cases in `apps/web/src/shared/server/composition-root.ts`:
+
+   ```ts
+   import { createFarewellUseCases, farewellEnv } from "@/features/farewell/server";
+   // in the loadEnv(process.env, { … }) argument:
+   farewell: farewellEnv,
+   // in the createRouter({ … }) argument:
+   farewell: createFarewellUseCases({
+     clock,
+     ids: new RandomIdGenerator(),
+     env: env.features.farewell,
+   }),
+   ```
+
+   A feature owns its settings: the `EnvSpec` in its `server.ts` (`farewellEnv`). Step 1 renamed
+   the copied `GREETING_HISTORY_LIMIT` to `FAREWELL_HISTORY_LIMIT`; add each variable to
+   `apps/web/.env.example` and the `webServer.env` of `apps/web/playwright.config.ts`.
+
+4. Sort the renamed imports, regenerate the route tree (`src/routeTree.gen.ts`, committed) and run
+   the full suite:
+
+   ```bash
+   pnpm format
+   pnpm --filter web build
+   pnpm check
+   ```
+
+   `pnpm --filter web dev` regenerates the route tree too. No file under `biome.jsonc`,
+   `knip.json`, `scripts/biome/`, `vite.config.ts` or `vitest.config.ts` changes. Then replace the
+   copied logic, copy and tests with the feature's own, and add its end-to-end test under
+   `apps/web/tests/e2e/`.
+
+### Remove the demo
+
+1. Delete the feature, its tests and its end-to-end test:
+
+   ```bash
+   rm -rf apps/web/src/features/greeting apps/web/tests/unit/features/greeting \
+     apps/web/tests/e2e/greeting.spec.ts apps/web/tests/contracts/greeting-repository.contract.ts
+   ```
+
+2. Remove its registration lines:
+   - `apps/web/src/shared/server/rpc/router.ts`: the `greeting` import, `RouterDependencies` entry
+     and procedures. When no feature is left, delete `RouterDependencies` and the `@param` line;
+     `createRouter` takes no argument:
+
+     ```ts
+     export function createRouter() {
+       return {};
+     }
+     ```
+
+   - `apps/web/src/shared/server/composition-root.ts`: the `greeting` import, its `loadEnv` entry
+     (`loadEnv(process.env, {})` when no feature is left) and its wiring (`createRouter()` when no
+     feature is left).
+   - `GREETING_HISTORY_LIMIT` in `apps/web/.env.example`, in your `apps/web/.env` and in the
+     `webServer.env` of `apps/web/playwright.config.ts`.
+   - `apps/web/src/routes/index.tsx`: the greeting import, loader and component; render your home
+     page instead, or leave `createFileRoute("/")({})`.
+
+3. Drop the test dependency only the demo used, then run the full suite:
+
+   ```bash
+   pnpm --filter web remove @testing-library/user-event
+   pnpm format
+   pnpm check
+   ```
 
 ## Branch flow
 
@@ -161,9 +304,31 @@ gitGraph
 - Every pull request targets `staging`, and its title must be a Conventional Commit.
 - Direct pushes, force pushes and branch deletion are blocked on all three branches, for
   administrators too.
-- Merging requires the `check` and `pr-title` status checks to pass.
+- Merging requires the `check`, `pr-title`, `e2e` and `agents-md` status checks to pass (see
+  [CI](#ci)).
 - After each release, the release workflow opens `chore: back-merge main into staging` and lets it
   merge itself (squash) once the checks pass, so the release commit reaches `staging`.
+
+## CI
+
+`.github/workflows/ci.yml` runs on every pull request and on pushes to `staging`, `demo` and
+`main`. Each job name is a required status check on the three branches
+(`.github/rulesets/*.json`):
+
+| Job         | What it runs                                                                                    |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| `check`     | `pnpm check`: lint, typecheck, unit tests, knip and build                                       |
+| `pr-title`  | Conventional Commits check of the pull request title (pull requests only)                       |
+| `e2e`       | Playwright (Chromium) against the production build: `pnpm exec turbo run test:e2e --filter=web` |
+| `agents-md` | `agents-md.sh --check` from claude-conventions at a pinned commit: `AGENTS.md` is up to date    |
+
+When `e2e` fails, the Playwright HTML report and traces are attached to the run as the
+`playwright-report` artifact. Reproduce locally with
+`pnpm exec turbo run test:e2e --filter=web` (first run:
+`pnpm --filter web exec playwright install chromium`).
+
+Rulesets live in the repository but GitHub only applies them through `scripts/setup-repo.sh`:
+after merging a change to `.github/rulesets/` (for example a new required check), re-run it.
 
 ## Personal tooling
 
