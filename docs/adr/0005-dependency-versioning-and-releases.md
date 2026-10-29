@@ -39,6 +39,16 @@ pins need an automated update channel, and automated releases need a machine-rea
   `.release-please-manifest.json`). It opens a release pull request that bumps versions and writes
   `CHANGELOG.md` from the Conventional Commits; merging it tags the release. Manifest mode lets
   each app added later get its own entry without changing the workflow.
+- **Packages**: the root (`.`, tag `tanstack-monorepo-template-v<version>`, root `CHANGELOG.md`)
+  and `apps/web` (component `web`, tag `web-v<version>`, `apps/web/CHANGELOG.md`, version in
+  `apps/web/package.json`). The root has `exclude-paths: ["apps/web"]`: a commit whose files are
+  all under `apps/web` is released only under `web`; a commit that also touches files outside it
+  is listed in both changelogs (release-please skips a commit for a package only when every file
+  belongs to an excluded path). Shared packages (`packages/*`) stay part of the root release.
+- With more than one package, release-please opens one combined release pull request,
+  `chore: release main`, that bumps each package with releasable commits.
+- A new package starts at `0.0.0` in `.release-please-manifest.json` with
+  `initial-version: "0.1.0"` and `bump-minor-pre-major: true` in its config entry (see below).
 - After each release, `main` is back-merged into `staging` automatically (see ADR 0006).
 
 **0.x versioning**
@@ -57,8 +67,8 @@ pins need an automated update channel, and automated releases need a machine-rea
   `actions/create-github-app-token` from the `RELEASE_APP_CLIENT_ID` variable and the
   `RELEASE_APP_PRIVATE_KEY` secret; the workflow's own `GITHUB_TOKEN` is read-only.
 - Why: a pull request opened with `GITHUB_TOKEN` does not trigger workflows (GitHub's guard
-  against recursive runs). The `check` and `pr-title` checks required by the `main` ruleset never
-  run on it, so the release pull request can never be merged. A pull request opened by an App
+  against recursive runs). The checks required by the `main` ruleset (`check`, `pr-title`, `e2e`,
+  `agents-md`) never run on it, so the release pull request can never be merged. A pull request opened by an App
   triggers workflows normally.
 - The token is scoped to Contents, Pull requests and Issues (labels), all read and write.
 

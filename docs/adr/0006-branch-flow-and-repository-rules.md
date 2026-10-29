@@ -43,7 +43,7 @@ feature/* --squash--> staging --merge commit--> demo --merge commit--> main
   changelog upstream and conflicts on those files.
 - After each release, `.github/workflows/release-please.yml` uses the release App token to open a
   `chore: back-merge main into staging` pull request (unless one is already open) and enables
-  auto-merge on it. It merges once `check` and `pr-title` pass, like any other pull request.
+  auto-merge on it. It merges once the required checks pass, like any other pull request.
 - The back-merge is **squash-merged**: the `staging` ruleset accepts only squash merges with a
   linear history, and the workflow follows the ruleset rather than working around it.
 
@@ -51,8 +51,9 @@ feature/* --squash--> staging --merge commit--> demo --merge commit--> main
 - One ruleset per branch in `.github/rulesets/` (`staging.json`, `demo.json`, `main.json`), in the
   GitHub REST format, so they can also be imported through the GitHub UI.
 - Every protected branch: no deletion, no force push, changes only through pull requests, required
-  status checks `check` and `pr-title`, conversations resolved before merging, stale approvals
-  dismissed on push.
+  status checks `check`, `pr-title`, `e2e` and `agents-md`, conversations resolved before merging,
+  stale approvals dismissed on push. A new required check reaches GitHub only when
+  `scripts/setup-repo.sh` is re-run after the change is merged.
 - `staging` allows only squash merges and requires linear history; `demo` and `main` allow only
   merge commits.
 - **No bypass actors.** Nobody, administrators included, can push directly or merge a red pull

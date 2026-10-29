@@ -26,8 +26,11 @@ A change must pass, with zero errors and zero warnings:
   `pre-commit` runs Biome on staged files and re-stages fixes; `commit-msg` runs commitlint with
   the Conventional Commits preset.
 - **CI parity**: the `check` job in `.github/workflows/ci.yml` runs `pnpm check`, the same command
-  developers run locally. The `pr-title` job validates the pull request title. Both are required
-  status checks on every protected branch (see ADR 0006).
+  developers run locally. The `pr-title` job validates the pull request title. The `e2e` job runs
+  the Playwright suite against the production build (`turbo run test:e2e --filter=web`) and the
+  `agents-md` job checks that `AGENTS.md` matches the Claude rules (claude-conventions
+  `agents-md.sh --check`, plugin pinned by commit SHA). All four are required status checks on
+  every protected branch (see ADR 0006).
 
 ## Alternatives considered
 
