@@ -141,7 +141,7 @@ dependency is added with `pnpm add -E` at the version re-verified on the registr
 
 - [X] T056 Run quickstart §1–§7 end to end; record timings for SC-001 and SC-002
 - [X] T057 With the maintainer's OK: commit, open the PR to `staging`, re-run `scripts/setup-repo.sh` after merge so the new required checks apply, promote, execute quickstart §8 (red e2e verified locally; required checks verified on the three rulesets)
-- [ ] T058 Mark spec 1 tasks T057–T062 and this feature's checklists complete
+- [X] T058 Mark spec 1 tasks T057–T062 and this feature's checklists complete
 
 ---
 
