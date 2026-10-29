@@ -39,13 +39,19 @@ feature/* --squash--> staging --merge commit--> demo --merge commit--> main
 
 **Back-merge after a release**
 - Merging the release pull request adds a commit to `main` (version bump and `CHANGELOG.md`) that
-  does not exist on `staging`. Left there, the next promotion carries a stale version and
+  does not exist on `staging` or `demo`. Left there, the next promotion carries a stale version and
   changelog upstream and conflicts on those files.
 - After each release, `.github/workflows/release-please.yml` uses the release App token to open a
-  `chore: back-merge main into staging` pull request (unless one is already open) and enables
-  auto-merge on it. It merges once the required checks pass, like any other pull request.
-- The back-merge is **squash-merged**: the `staging` ruleset accepts only squash merges with a
-  linear history, and the workflow follows the ruleset rather than working around it.
+  `chore: back-merge main into staging` and a `chore: back-merge main into demo` pull request
+  (unless one is already open, and skipping a branch that already contains `main`) and enables
+  auto-merge on each. They merge once the required checks pass, like any other pull request.
+- The back-merge into `staging` is **squash-merged**: the `staging` ruleset accepts only squash
+  merges with a linear history, and the workflow follows the ruleset rather than working around it.
+- The back-merge into `demo` uses a **merge commit**, as the `demo` ruleset requires. It is needed
+  for ancestry: the release commit reaches `staging` only squashed, so without it `main` is never
+  an ancestor of `demo`, and the next `demo → main` promotion conflicts wherever `staging` changed
+  lines the release also changed (for example `.release-please-manifest.json`). Once `main` is an
+  ancestor of `demo`, that promotion carries only new commits.
 
 **Rulesets as code**
 - One ruleset per branch in `.github/rulesets/` (`staging.json`, `demo.json`, `main.json`), in the
@@ -85,10 +91,11 @@ feature/* --squash--> staging --merge commit--> demo --merge commit--> main
 
 - Every generated project is protected minutes after creation by running one script.
 - `main` history shows merge commits for promotions; `staging` stays linear.
-- Because back-merges are squashed, `main` and `staging` have different commit histories after a
-  release while their content is identical. This is harmless: the next promotion merges cleanly
-  since the release changes already exist on `staging`, and release-please reads commits since
-  the last release tag on `main`, so the squashed back-merge (`chore:`) adds no changelog entry.
+- Because the `staging` back-merge is squashed, `main` and `staging` have different commit
+  histories after a release while their content is identical. This is harmless: the `demo`
+  back-merge keeps `main` an ancestor of `demo`, so the next `demo → main` promotion merges
+  cleanly, and release-please reads commits since the last release tag on `main`, so the squashed
+  back-merge (`chore:`) adds no changelog entry.
 - Back-merges need auto-merge enabled on the repository (`scripts/setup-repo.sh` step 3); without
   it the workflow step fails and the pull request must be merged by hand.
 - Hotfixes follow the same path (`staging → demo → main`); there is no shortcut by design.

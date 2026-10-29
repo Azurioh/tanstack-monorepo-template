@@ -323,6 +323,10 @@ Format: `- YYYY-MM-DD — symptom → cause → fix`. See `knowledge.md` for whe
 - 2026-10-29 — SSR loader fails with "fetch failed" behind a port-forward, container or proxy → the
   server called `/api/rpc` over HTTP at the browser's Host → SSR uses the in-process client the
   composition root registers (`globalThis.$rpcServerClient`, ADR 0011); never self-fetch.
+- 2026-10-29 — `demo → main` promotion conflicts (for example on `.release-please-manifest.json`)
+  → the release commit reached `staging` only squashed, so `main` was never an ancestor of `demo`
+  → the release workflow also back-merges `main → demo` with a merge commit (ADR 0006); if it did
+  not run, merge `main` into `demo` through a `chore: merge main into demo` PR.
 
 ## .claude/rules/ui.md
 
@@ -383,7 +387,8 @@ Format: `- YYYY-MM-DD — symptom → cause → fix`. See `knowledge.md` for whe
 
 - Release flow (ADR 0006): feature PRs are squash-merged into `staging`; promotions
   `staging → demo → main` are merge-commit PRs, never squashed or rebased; release-please opens
-  the release PR on `main`, then a back-merge PR `main → staging` merges itself.
+  the release PR on `main`, then back-merge PRs `main → staging` (squash) and `main → demo`
+  (merge commit) merge themselves.
 - Commit and PR titles are checked by commitlint (`pr-title` job); scopes are optional.
 - Required checks on `staging`, `demo` and `main` = the CI job names `check`, `pr-title`, `e2e`,
   `agents-md` (`.github/rulesets/*.json`). A renamed or added job changes all three rulesets in

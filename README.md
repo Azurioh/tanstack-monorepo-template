@@ -31,7 +31,7 @@ of being created.
 - **Releases**: release-please (manifest mode) opens release pull requests with a generated
   changelog on `main`, starting at `0.1.0`, with a separate version and changelog for
   `apps/web` (`apps/web/CHANGELOG.md`); after each release, `main` is back-merged into `staging`
-  automatically.
+  and `demo` automatically.
 - **Dependency updates**: Dependabot, grouped and targeting `staging`, with exact version pins.
 - **Repository rules as code**: rulesets for `staging`, `demo` and `main` in `.github/rulesets/`,
   applied with one script along with merge settings, description, topics and private
@@ -306,8 +306,9 @@ gitGraph
   administrators too.
 - Merging requires the `check`, `pr-title`, `e2e` and `agents-md` status checks to pass (see
   [CI](#ci)).
-- After each release, the release workflow opens `chore: back-merge main into staging` and lets it
-  merge itself (squash) once the checks pass, so the release commit reaches `staging`.
+- After each release, the release workflow opens `chore: back-merge main into staging` (squash) and
+  `chore: back-merge main into demo` (merge commit) and lets them merge themselves once the checks
+  pass, so the release commit reaches `staging` and `main` stays an ancestor of `demo`.
 
 ## CI
 
