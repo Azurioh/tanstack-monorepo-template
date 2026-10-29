@@ -3,6 +3,7 @@
   "treatConfigHintsAsErrors": true,
   "workspaces": {
     ".": {},
+    "apps/*": {},
     "packages/*": {}
   }
 }

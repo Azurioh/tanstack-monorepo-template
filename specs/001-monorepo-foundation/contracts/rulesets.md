@@ -38,7 +38,12 @@ Example (`main`, promotion variant; `staging` adds `{ "type": "required_linear_h
       "type": "required_status_checks",
       "parameters": {
         "strict_required_status_checks_policy": false,
-        "required_status_checks": [{ "context": "check" }, { "context": "pr-title" }]
+        "required_status_checks": [
+          { "context": "check" },
+          { "context": "pr-title" },
+          { "context": "e2e" },
+          { "context": "agents-md" }
+        ]
       }
     }
   ]
@@ -48,7 +53,8 @@ Example (`main`, promotion variant; `staging` adds `{ "type": "required_linear_h
 ## Invariants
 
 - Required status check contexts MUST equal the job names in `.github/workflows/ci.yml`
-  (`check`, `pr-title`). Renaming a job requires updating all three rulesets in the same PR.
+  (`check`, `pr-title`, `e2e`, `agents-md`; the last two added by spec 002). Renaming a job requires
+  updating all three rulesets in the same PR.
 - `required_approving_review_count` is `0` for a solo maintainer; a team project raises it and
   sets `require_code_owner_review: true` (documented in ADR 0006).
 - No `bypass_actors`: nobody, admin included, pushes directly or merges a red pull request.

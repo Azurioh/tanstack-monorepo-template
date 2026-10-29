@@ -1,15 +1,23 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
+    },
+    "test:e2e": {
+      "dependsOn": ["build"]
     },
     "typecheck": {
       "dependsOn": ["^build"]
     },
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/biome.jsonc", "$TURBO_ROOT$/scripts/biome/**"]
     },
     "//#lint": {},
     "//#typecheck": {

@@ -28,7 +28,7 @@ tools, cached task runs and a predictable place for each kind of code.
 - **Shared TypeScript configuration** lives in the `@repo/tsconfig` package (`base.json`, strict,
   `NodeNext`; `library.json` for packages), so every app and package extends it by name.
   `@repo/example` is a placeholder package that exercises every task until the first real
-  package exists.
+  package exists (removed in spec 2, where `apps/web` and `@repo/ui` exercise every task).
 - **TypeScript 7 (native)**. `typescript@7.0.2` is the type checker, run as `tsc --noEmit`.
   TypeScript 7.0 ships no JavaScript compiler API (planned for 7.1), so every tool in the stack was
   checked not to depend on it: Biome is self-contained, knip 6 parses with oxc, Vitest transpiles

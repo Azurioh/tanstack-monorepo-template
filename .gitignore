@@ -6,3 +6,13 @@ coverage
 !.env.example
 *.log
 .DS_Store
+test-results
+playwright-report
+
+# Claude Code: commit the shared config, ignore local state and caches
+.claude/*
+!.claude/settings.json
+!.claude/conventions.json
+!.claude/rules/
+!.claude/skills/
+.claude/settings.local.json

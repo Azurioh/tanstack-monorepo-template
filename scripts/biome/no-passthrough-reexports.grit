@@ -1,0 +1,13 @@
+language js
+
+// ARCH-REEXPORT: `export … from` is reserved to a feature's entry points (index.ts, server.ts,
+// testing.ts); every other module is imported from where it is defined.
+or {
+  `export * from $source`,
+  `export * as $namespace from $source`,
+  `export { $names } from $source`,
+  `export type { $names } from $source`
+} as $statement where {
+  not $filename <: r".*/apps/[^/]+/src/features/[^/]+/(?:index|server|testing)\.tsx?",
+  register_diagnostic(span=$statement, message="ARCH-REEXPORT: no pass-through re-export outside a feature's index.ts, server.ts or testing.ts.", severity="error")
+}
