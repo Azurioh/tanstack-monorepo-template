@@ -1,3 +1,4 @@
+import { createRouterClient } from "@orpc/server";
 import { createGreetingUseCases, greetingEnv } from "@/features/greeting/server";
 import { RandomIdGenerator } from "@/shared/server/adapters/random-id-generator";
 import { SystemClock } from "@/shared/server/adapters/system-clock";
@@ -33,3 +34,10 @@ export const router = createRouter({
     env: env.features.greeting,
   }),
 });
+
+/*
+ * In-process client used by server-side rendering (read by `shared/client/rpc-client.ts`), so a
+ * route loader calls the router directly with the same context as the `/api/rpc` handler instead
+ * of an HTTP request to the server itself.
+ */
+globalThis.$rpcServerClient = createRouterClient(router, { context: rpcContext });

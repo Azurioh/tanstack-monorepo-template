@@ -22,10 +22,16 @@ caches data.
 - **One endpoint.** The server route `src/routes/api/rpc.$.ts` mounts the router with oRPC's
   `RPCHandler` under `/api/rpc`. No feature declares its own HTTP route.
 - **Typed client without server code.** `src/shared/client/rpc-client.ts` builds a
-  `RouterClient<AppRouter>` from a type-only import of the router, with an isomorphic link: a
-  same-origin `RPCLink` in the browser, and during server-side rendering the same endpoint
-  resolved against the incoming request, forwarding its headers. Query and mutation options come
-  from `@orpc/tanstack-query`, so loaders and ViewModels share one cache.
+  `RouterClient<AppRouter>` from a type-only import of the router. In the browser it is a
+  same-origin `RPCLink` to `/api/rpc`. During server-side rendering it calls the router
+  in-process (oRPC's "Optimize SSR" recipe): the composition root registers
+  `createRouterClient(router, { context: rpcContext })` on `globalThis.$rpcServerClient`, with
+  the same context as the `/api/rpc` handler, and the client module reads it. `src/server.ts`
+  imports the composition root first so the client is registered before any route module loads.
+  The server never calls itself over HTTP: an HTTP self-call targets the Host the browser used,
+  which the server cannot always reach (port-forward, container, reverse proxy), and the page
+  then fails to render. Query and mutation options come from `@orpc/tanstack-query`, so loaders
+  and ViewModels share one cache.
 - **Input validation and error mapping at the boundary.** Each procedure validates its input with
   the feature's zod schema (`schemas.ts`, shared with the client form). One middleware
   (`src/shared/server/rpc/errors.ts`) maps business errors to `BAD_REQUEST` with a stable code

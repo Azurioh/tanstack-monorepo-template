@@ -13,6 +13,10 @@
   not cover → ADR first (`/conventions:adr`), code second.
 <!-- conventions:end architecture.structure -->
 
+- **One accepted global**: `globalThis.$rpcServerClient`, the in-process oRPC client for
+  server-side rendering (oRPC's "Optimize SSR" pattern, ADR 0011). Only the composition root
+  sets it; only `shared/client/rpc-client.ts` reads it. No other global.
+
 <!-- conventions:begin architecture.ports -->
 - **Ports and adapters everywhere.** Never reach an external dependency (DB,
   HTTP API, filesystem, clock, mail, vendor SDK) directly — go through a port

@@ -32,7 +32,7 @@ apps/web/
 │   │   │   ├── logging/logger.ts
 │   │   │   ├── ports/                  # Clock, IdGenerator
 │   │   │   └── adapters/               # SystemClock, RandomIdGenerator
-│   │   └── client/{rpc-client,query-client}.ts, components/
+│   │   └── client/{rpc-client,query-client,copy}.ts, components/
 │   ├── routes/{__root.tsx,index.tsx,api/rpc.$.ts}
 │   ├── router.tsx
 │   ├── routeTree.gen.ts                # generated, excluded from lint and knip

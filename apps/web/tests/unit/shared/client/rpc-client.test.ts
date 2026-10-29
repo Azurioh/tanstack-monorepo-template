@@ -1,42 +1,72 @@
-import type { RouterClient } from "@orpc/server";
+import { createRouterClient, type RouterClient } from "@orpc/server";
 import type { RouterUtils } from "@orpc/tanstack-query";
 import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
-import { createRpcLink, orpc } from "@/shared/client/rpc-client";
-import type { AppRouter } from "@/shared/server/rpc/router";
+import { createGreetingUseCases } from "@/features/greeting/server";
+import { FixedClock, SequentialIdGenerator } from "@/features/greeting/testing";
+import { createLogger } from "@/shared/server/logging/logger";
+import { type AppRouter, createRouter } from "@/shared/server/rpc/router";
 
-const incoming = new Request("https://app.example/greetings?page=2", {
-  headers: { cookie: "session=abc", "accept-language": "en" },
-});
+const NOW = new Date("2026-01-15T10:00:00.000Z");
 
-vi.mock("@tanstack/react-start/server", () => ({
-  getRequest: () => incoming,
-  getRequestHeaders: () => incoming.headers,
-}));
+function createServerClient(): RouterClient<AppRouter> {
+  const clock = new FixedClock(NOW);
+  const router = createRouter({
+    greeting: createGreetingUseCases({
+      clock,
+      ids: new SequentialIdGenerator("greeting"),
+      env: { GREETING_HISTORY_LIMIT: 10 },
+    }),
+  });
+  return createRouterClient(router, {
+    context: {
+      logger: createLogger({ level: "error", clock, write: () => undefined }),
+      referenceIds: new SequentialIdGenerator("ref"),
+    },
+  });
+}
+
+/** Loads a fresh copy of the module, which reads the registered client when it is evaluated. */
+async function loadRpcClient() {
+  vi.resetModules();
+  return import("@/shared/client/rpc-client");
+}
+
+function stubFetch() {
+  const fetchMock = vi.fn(async () => new Response(null, { status: 502 }));
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+}
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  globalThis.$rpcServerClient = undefined;
 });
 
 describe("RPC client", () => {
-  it("is typed from the application router", () => {
+  it("is typed from the application router", async () => {
+    const { orpc } = await loadRpcClient();
+
     expectTypeOf(orpc).toEqualTypeOf<RouterUtils<RouterClient<AppRouter>>>();
   });
 
-  it("calls the endpoint on the incoming request's origin during SSR, forwarding its headers", async () => {
-    const fetchMock = vi.fn(
-      async (_request: Request) =>
-        new Response(JSON.stringify({ json: "pong" }), {
-          headers: { "content-type": "application/json" },
-        }),
-    );
-    vi.stubGlobal("fetch", fetchMock);
+  it("calls the router in-process during SSR, never over HTTP", async () => {
+    const fetchMock = stubFetch();
+    const serverClient = createServerClient();
+    await serverClient.greeting.greet({ name: "Ada" });
+    globalThis.$rpcServerClient = serverClient;
+    const { orpc } = await loadRpcClient();
 
-    const output = await createRpcLink().call(["sample", "ping"], undefined, { context: {} });
+    const recent = await orpc.greeting.listRecent.call();
 
-    expect(output).toBe("pong");
-    const request = fetchMock.mock.calls[0]?.[0];
-    expect(request?.url).toBe("https://app.example/api/rpc/sample/ping");
-    expect(request?.headers.get("cookie")).toBe("session=abc");
-    expect(request?.headers.get("accept-language")).toBe("en");
+    expect(recent.map((greeting) => greeting.message)).toEqual(["Hello, Ada!"]);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("refuses to call the endpoint over HTTP from the server when no client is registered", async () => {
+    const fetchMock = stubFetch();
+    const { orpc } = await loadRpcClient();
+
+    await expect(orpc.greeting.listRecent.call()).rejects.toBeInstanceOf(ReferenceError);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
