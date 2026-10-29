@@ -85,7 +85,8 @@ feature branch --squash--> staging --merge commit--> demo --merge commit--> main
   never squashed: that would collapse the changelog into one entry and make the branches diverge.
 - release-please opens a release pull request on `main` as the release GitHub App, so the
   required checks run on it like on any other pull request; merging it tags the release and
-  updates `CHANGELOG.md`. Never edit `CHANGELOG.md` by hand.
+  updates `CHANGELOG.md` (root) and `apps/web/CHANGELOG.md` (the app, released separately as
+  `web`). Never edit a changelog by hand.
 - After each release, the release workflow opens a `chore: back-merge main into staging` pull
   request and enables auto-merge (squash) on it, so the release commit reaches `staging` without a
   manual step.
@@ -97,9 +98,26 @@ The full rationale is in [ADR 0006](./docs/adr/0006-branch-flow-and-repository-r
 1. Open an issue first for anything larger than a small fix, so the approach can be agreed on.
 2. Keep each pull request focused on one change.
 3. Fill in the pull request template: what changed, why, and how it was verified.
-4. Make sure the `check` and `pr-title` status checks are green and every review conversation is
-   resolved; both are required to merge.
+4. Make sure the `check`, `pr-title`, `e2e` and `agents-md` status checks are green and every
+   review conversation is resolved; all of them are required to merge (see
+   [CI checks](#ci-checks)).
 5. A maintainer squash-merges the pull request into `staging`.
+
+## CI checks
+
+| Check       | Runs                                                    | Fix locally                                        |
+| ----------- | ------------------------------------------------------- | -------------------------------------------------- |
+| `check`     | `pnpm check` (lint, typecheck, unit tests, knip, build) | `pnpm check`                                       |
+| `pr-title`  | Conventional Commits check of the pull request title    | edit the title                                     |
+| `e2e`       | Playwright against the production build of `apps/web`   | `pnpm exec turbo run test:e2e --filter=web`        |
+| `agents-md` | `AGENTS.md` matches `CLAUDE.md` + `.claude/rules/**`    | regenerate it (plugin hook), never edit it by hand |
+- `e2e` attaches the Playwright HTML report and traces as the `playwright-report` artifact when it
+  fails. First local run: `pnpm --filter web exec playwright install chromium`.
+- The required checks are the job names in `.github/workflows/ci.yml`, listed in
+  `.github/rulesets/*.json`. GitHub applies a ruleset change only when a maintainer re-runs
+  `scripts/setup-repo.sh` after the merge.
+- The claude-conventions commit used by `agents-md` is bumped by hand (`CONVENTIONS_SHA` in
+  `ci.yml`, see `.claude/rules/workflow.md`).
 
 ## Architecture Decision Records
 

@@ -5,6 +5,14 @@
       "release-type": "node",
       "changelog-path": "CHANGELOG.md",
       "initial-version": "0.1.0",
+      "bump-minor-pre-major": true,
+      "exclude-paths": ["apps/web"]
+    },
+    "apps/web": {
+      "release-type": "node",
+      "component": "web",
+      "changelog-path": "CHANGELOG.md",
+      "initial-version": "0.1.0",
       "bump-minor-pre-major": true
     }
   }
