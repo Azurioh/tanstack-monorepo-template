@@ -34,19 +34,31 @@ jobs:
           manifest-file: .release-please-manifest.json
 
       # The release commit lands on main only (merge commit from the release pull request), so it is
-      # brought back to staging; otherwise the next promotion would conflict on CHANGELOG.md and the
-      # version files. staging accepts squash merges only (ADR 0006).
-      - name: Back-merge main into staging
+      # brought back to staging and demo; otherwise the next promotion would conflict on CHANGELOG.md
+      # and the version files. staging accepts squash merges only, which keeps it linear; demo takes a
+      # merge commit, which makes main an ancestor of demo so the next demo → main promotion only
+      # carries new commits (ADR 0006). A branch that already contains main is skipped, because
+      # GitHub refuses a pull request with no commits between the two branches.
+      - name: Back-merge main into staging and demo
         if: ${{ steps.release.outputs.releases_created == 'true' }}
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           REPO: ${{ github.repository }}
         run: |
-          number="$(gh pr list --repo "$REPO" --head main --base staging --state open --json number --jq '.[0].number // empty')"
-          if [[ -z "$number" ]]; then
-            url="$(gh pr create --repo "$REPO" --head main --base staging \
-              --title 'chore: back-merge main into staging' \
-              --body 'Brings the release commit from main back into staging. Opened automatically after a release; merges itself once the required checks pass.')"
-            number="${url##*/}"
-          fi
-          gh pr merge "$number" --repo "$REPO" --auto --squash
+          back_merge() {
+            local base="$1" method="$2" number url
+            if [[ "$(gh api "repos/$REPO/compare/$base...main" --jq '.ahead_by')" == "0" ]]; then
+              echo "$base already contains main, nothing to back-merge."
+              return
+            fi
+            number="$(gh pr list --repo "$REPO" --head main --base "$base" --state open --json number --jq '.[0].number // empty')"
+            if [[ -z "$number" ]]; then
+              url="$(gh pr create --repo "$REPO" --head main --base "$base" \
+                --title "chore: back-merge main into $base" \
+                --body "Brings the release commit from main back into $base. Opened automatically after a release; merges itself once the required checks pass.")"
+              number="${url##*/}"
+            fi
+            gh pr merge "$number" --repo "$REPO" --auto "--$method"
+          }
+          back_merge staging squash
+          back_merge demo merge

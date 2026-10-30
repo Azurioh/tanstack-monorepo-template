@@ -1,6 +1,8 @@
 <!--
 Sync Impact Report
-- Version change: 1.1.0 → 1.2.0 (MINOR: principle V expanded)
+- Version change: 1.2.0 → 1.3.0 (MINOR: principle V expanded)
+  - V: back-merge `main` → `demo` after a release uses a merge commit (demo ruleset)
+- Previous: 1.1.0 → 1.2.0 (MINOR: principle V expanded)
   - V: back-merge `main` → `staging` after a release is squash-merged (staging ruleset)
 - Previous: 1.0.0 → 1.1.0 (MINOR: principle V materially changed)
   - V: squash only for feature PRs into staging; promotions use merge commits
@@ -62,7 +64,9 @@ Commits and PR titles MUST follow Conventional Commits 1.0.0 (scope optional). F
 requests into the integration branch MUST be squash-merged, with the PR title becoming the commit
 message. Promotion pull requests between long-lived branches MUST use a merge commit titled with
 the PR title, so every promoted commit reaches `main` unchanged. The back-merge pull request
-`main` → `staging` opened after each release is squash-merged, as the `staging` ruleset requires.
+`main` → `staging` opened after each release is squash-merged, as the `staging` ruleset requires;
+the back-merge pull request `main` → `demo` uses a merge commit, as the `demo` ruleset requires,
+so `main` stays an ancestor of `demo`.
 release-please MUST drive
 versions, tags and changelogs from `main`.
 Rationale: history becomes machine-readable, so release notes need no manual step; squashing a
@@ -116,4 +120,4 @@ Versioning follows semantic versioning: MAJOR for removed or redefined principle
 principles or materially expanded guidance, PATCH for clarifications. Every PR review MUST check
 compliance with the principles above; any deviation MUST be justified in the PR description.
 
-**Version**: 1.2.0 | **Ratified**: 2026-10-23 | **Last Amended**: 2026-10-24
+**Version**: 1.3.0 | **Ratified**: 2026-10-23 | **Last Amended**: 2026-10-29
