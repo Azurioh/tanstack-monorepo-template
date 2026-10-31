@@ -1,0 +1,18 @@
+language js
+
+// ARCH-FEATURE: a file under src/features/<own>/ never imports or re-exports another feature.
+// Imports from shared/, routes/ and src/*.ts files are covered by noRestrictedImports in
+// biome.jsonc.
+or {
+  `import $clause from $source`,
+  `import $source`,
+  `export * from $source`,
+  `export * as $namespace from $source`,
+  `export { $names } from $source`,
+  `export type { $names } from $source`
+} as $statement where {
+  $filename <: r".*/apps/[^/]+/src/features/([^/]+)/.*"($own),
+  $source <: r"['\"]@/features/([^/'\"]+)(?:/[^'\"]*)?['\"]"($target),
+  not $target <: $own,
+  register_diagnostic(span=$statement, message="ARCH-FEATURE: a feature never imports another feature; move shared code to src/shared/.", severity="error")
+}

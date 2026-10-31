@@ -1,0 +1,390 @@
+{
+  // Shared architecture preset (ADR 0010), consumed via `"extends": ["@azurioh/arch-rules/biome"]`.
+  // Never name this file biome.jsonc: Biome would read it as a nested root configuration.
+  // Architecture rules (ADR 0010, ids in specs/002-starter-app/contracts/architecture-rules.md).
+  // GritQL plugins cover what noRestrictedImports cannot express; scoped by path, never by feature.
+  "plugins": [
+    {
+      "path": "@azurioh/arch-rules/feature-boundaries",
+      "includes": ["apps/*/src/features/*/**"]
+    },
+    {
+      "path": "@azurioh/arch-rules/client-server",
+      "includes": [
+        "apps/*/src/features/*/client/**",
+        "apps/*/src/features/*/index.ts",
+        "apps/*/src/features/*/index.tsx",
+        "apps/*/src/shared/client/**"
+      ]
+    },
+    {
+      "path": "@azurioh/arch-rules/no-passthrough-reexports",
+      "includes": ["apps/*/src/**"]
+    },
+    {
+      "path": "@azurioh/arch-rules/vendor-sdks",
+      "includes": [
+        "apps/*/src/**",
+        "!apps/*/src/features/*/server/infrastructure/**",
+        "!apps/*/src/shared/server/adapters/**"
+      ]
+    }
+  ],
+  // One override per layer. Overrides setting noRestrictedImports on the same file do not merge:
+  // the last match wins, so every override repeats the ARCH-RELATIVE pattern.
+  "overrides": [
+    {
+      "includes": ["apps/*/src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["../**", ".."],
+                    "message": "ARCH-RELATIVE: import through the @/ alias, never a parent-relative path."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/*/src/features/*/server/domain/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/**", "!@/shared/domain/**", "!@/features/*/server/domain/**"],
+                    "message": "ARCH-LAYER: server/domain imports only server/domain and shared/domain."
+                  },
+                  {
+                    "group": ["../**", ".."],
+                    "message": "ARCH-RELATIVE: import through the @/ alias, never a parent-relative path."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/*/src/features/*/server/application/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@/**",
+                      "!@/shared/domain/**",
+                      "!@/features/*/server/domain/**",
+                      "!@/features/*/server/application/**",
+                      "!@/shared/server/ports/**"
+                    ],
+                    "message": "ARCH-LAYER: server/application imports only server/domain, server/application, shared/domain and shared/server/ports."
+                  },
+                  {
+                    "group": ["../**", ".."],
+                    "message": "ARCH-RELATIVE: import through the @/ alias, never a parent-relative path."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/*/src/features/*/server/infrastructure/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@/**",
+                      "!@/shared/domain/**",
+                      "!@/features/*/server/domain/**",
+                      "!@/features/*/server/application/**",
+                      "!@/shared/server/ports/**",
+                      "!@/features/*/server/infrastructure/**",
+                      "!@/shared/server/adapters/**"
+                    ],
+                    "message": "ARCH-LAYER: server/infrastructure imports only inner layers, shared/server/ports and shared/server/adapters."
+                  },
+                  {
+                    "group": ["../**", ".."],
+                    "message": "ARCH-RELATIVE: import through the @/ alias, never a parent-relative path."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/*/src/features/*/server/rpc/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@/**",
+                      "!@/shared/domain/**",
+                      "!@/features/*/server/domain/**",
+                      "!@/features/*/server/application/**",
+                      "!@/shared/server/ports/**",
+                      "!@/features/*/server/infrastructure/**",
+                      "!@/shared/server/adapters/**",
+                      "!@/features/*/server/rpc/**",
+                      "!@/features/*/schemas",
+                      "!@/shared/server/rpc/**"
+                    ],
+                    "message": "ARCH-LAYER: server/rpc imports only inner layers, schemas.ts and shared/server/rpc."
+                  },
+                  {
+                    "group": ["../**", ".."],
+                    "message": "ARCH-RELATIVE: import through the @/ alias, never a parent-relative path."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/*/src/features/*/client/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@/**",
+                      "!@/features/*/client/**",
+                      "!@/features/*/schemas",
+                      "!@/shared/client/**",
+                      "!@/features/*/server",
+                      "!@/features/*/server/**",
+                      "!@/shared/server/**"
+                    ],
+                    "message": "ARCH-LAYER: client code imports only client/, schemas.ts, shared/client and server code (type-only)."
+                  },
+                  {
+                    "group": ["../**", ".."],
+                    "message": "ARCH-RELATIVE: import through the @/ alias, never a parent-relative path."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/*/src/shared/domain/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/**", "!@/shared/domain/**"],
+                    "message": "ARCH-LAYER: shared/domain imports only shared/domain."
+                  },
+                  {
+                    "group": ["../**", ".."],
+                    "message": "ARCH-RELATIVE: import through the @/ alias, never a parent-relative path."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "apps/*/src/shared/**",
+        "!apps/*/src/shared/domain/**",
+        "!apps/*/src/shared/server/composition-root.ts",
+        "!apps/*/src/shared/server/rpc/router.ts"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/features", "@/features/**"],
+                    "message": "ARCH-FEATURE: shared/ never imports a feature."
+                  },
+                  {
+                    "group": ["../**", ".."],
+                    "message": "ARCH-RELATIVE: import through the @/ alias, never a parent-relative path."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "apps/*/src/shared/server/composition-root.ts",
+        "apps/*/src/shared/server/rpc/router.ts"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/features", "@/features/**", "!@/features/*/server"],
+                    "message": "ARCH-FEATURE: the composition root and the RPC router import only a feature's server.ts."
+                  },
+                  {
+                    "group": ["../**", ".."],
+                    "message": "ARCH-RELATIVE: import through the @/ alias, never a parent-relative path."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/*/src/routes/**", "!apps/*/src/routes/api/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@/features",
+                      "@/features/**",
+                      "!@/features/*",
+                      "!@/features/*/index"
+                    ],
+                    "message": "ARCH-FEATURE: routes import only a feature's index.ts."
+                  },
+                  {
+                    "group": ["@/shared/server", "@/shared/server/**"],
+                    "message": "ARCH-LAYER: routes outside routes/api/ never import shared/server."
+                  },
+                  {
+                    "group": ["../**", ".."],
+                    "message": "ARCH-RELATIVE: import through the @/ alias, never a parent-relative path."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/*/src/routes/api/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@/features",
+                      "@/features/**",
+                      "!@/features/*",
+                      "!@/features/*/index"
+                    ],
+                    "message": "ARCH-FEATURE: routes import only a feature's index.ts."
+                  },
+                  {
+                    "group": [
+                      "@/shared/server",
+                      "@/shared/server/**",
+                      "!@/shared/server/composition-root"
+                    ],
+                    "message": "ARCH-LAYER: routes/api/ imports only shared/server/composition-root from shared/server."
+                  },
+                  {
+                    "group": ["../**", ".."],
+                    "message": "ARCH-RELATIVE: import through the @/ alias, never a parent-relative path."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/*/src/*.ts", "apps/*/src/*.tsx"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@/features",
+                      "@/features/**",
+                      "!@/features/*",
+                      "!@/features/*/index",
+                      "!@/features/*/server"
+                    ],
+                    "message": "ARCH-FEATURE: outside a feature, import only its index.ts or server.ts."
+                  },
+                  {
+                    "group": ["../**", ".."],
+                    "message": "ARCH-RELATIVE: import through the @/ alias, never a parent-relative path."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
