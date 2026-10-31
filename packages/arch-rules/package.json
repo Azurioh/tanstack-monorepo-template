@@ -1,0 +1,37 @@
+{
+  "name": "@azurioh/arch-rules",
+  "version": "0.0.0",
+  "private": false,
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Azurioh/tanstack-monorepo-template.git",
+    "directory": "packages/arch-rules"
+  },
+  "bin": {
+    "arch-rules": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "preset.jsonc",
+    "biome-manifest.jsonc",
+    "plugins",
+    "rules"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@biomejs/biome": ">=2.6.3 <3.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.3",
+    "@repo/tsconfig": "workspace:*",
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5"
+  }
+}

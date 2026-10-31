@@ -4,6 +4,10 @@
   "workspaces": {
     ".": {},
     "apps/*": {},
-    "packages/*": {}
+    "packages/*": {},
+    "packages/arch-rules": {
+      "entry": ["src/cli.ts"],
+      "ignoreDependencies": ["@biomejs/biome"]
+    }
   }
 }

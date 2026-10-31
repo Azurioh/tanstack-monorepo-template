@@ -19,6 +19,16 @@
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/biome.jsonc", "$TURBO_ROOT$/scripts/biome/**"]
     },
+    "@azurioh/arch-rules#test": {
+      "dependsOn": ["^build", "build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "preset.jsonc",
+        "biome-manifest.jsonc",
+        "plugins/**",
+        "rules/**"
+      ]
+    },
     "//#lint": {},
     "//#typecheck": {
       "inputs": ["$TURBO_ROOT$/*.ts", "$TURBO_ROOT$/tsconfig.json"]
