@@ -14,6 +14,7 @@ jobs:
   release-please:
     name: release-please
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Create release app token
         id: app-token
