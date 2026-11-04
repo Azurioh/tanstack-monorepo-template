@@ -15,6 +15,10 @@ jobs:
     name: release-please
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Bracket syntax: the per-path output keys contain '/' and '--'.
+    outputs:
+      arch-rules-release-created: ${{ steps.release.outputs['packages/arch-rules--release_created'] }}
+      arch-rules-tag-name: ${{ steps.release.outputs['packages/arch-rules--tag_name'] }}
     steps:
       - name: Create release app token
         id: app-token
@@ -63,3 +67,78 @@ jobs:
           }
           back_merge staging squash
           back_merge demo merge
+
+  # npm trusted publishing (OIDC, id-token: write): no npm token is stored anywhere. Trusted
+  # publishing can only be configured for a package that already exists, so the first version is
+  # published by hand (packages/arch-rules/README.md, "Maintainers: first publish").
+  publish-arch-rules:
+    name: publish-arch-rules
+    needs: release-please
+    if: ${{ needs.release-please.outputs.arch-rules-release-created == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PACKAGE: "@azurioh/arch-rules"
+    steps:
+      # A 404 means the hand-made first publish has not happened yet: skip with a notice so the
+      # run on main stays green. Any other registry error fails the job.
+      - name: Check the package exists on npm
+        id: registry
+        run: |
+          if output="$(npm view "$PACKAGE" version 2>&1)"; then
+            echo "Latest published version: $output"
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          elif grep -q 'E404' <<< "$output"; then
+            echo "::notice title=$PACKAGE not published yet::Publish the first version by hand, see the section \"Maintainers: first publish\" in packages/arch-rules/README.md. Later versions are published by this job."
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "$output" >&2
+            exit 1
+          fi
+
+      - name: Checkout the release tag
+        if: ${{ steps.registry.outputs.published == 'true' }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release-please.outputs.arch-rules-tag-name }}
+          persist-credentials: false
+
+      # pnpm and Node from .node-version, then pnpm install --frozen-lockfile.
+      - name: Setup
+        if: ${{ steps.registry.outputs.published == 'true' }}
+        uses: ./.github/actions/setup
+
+      - name: Build and test
+        if: ${{ steps.registry.outputs.published == 'true' }}
+        run: pnpm exec turbo run build test --filter="$PACKAGE"
+
+      # Trusted publishing needs npm 11.5.1 or later.
+      - name: Check the npm version
+        if: ${{ steps.registry.outputs.published == 'true' }}
+        run: |
+          required="11.5.1"
+          current="$(npm --version)"
+          if [[ "$(printf '%s\n' "$required" "$current" | sort -V | head -n 1)" != "$required" ]]; then
+            echo "::error::npm $current is older than $required, the minimum for trusted publishing."
+            exit 1
+          fi
+          echo "npm $current"
+
+      # npm publish does not rewrite workspace: ranges; pnpm pack writes a tarball with them
+      # resolved, and npm publishes that tarball with provenance.
+      - name: Pack and publish
+        if: ${{ steps.registry.outputs.published == 'true' }}
+        working-directory: packages/arch-rules
+        run: |
+          pack_dir="$RUNNER_TEMP/arch-rules-pack"
+          mkdir -p "$pack_dir"
+          pnpm pack --pack-destination "$pack_dir"
+          tarballs=("$pack_dir"/*.tgz)
+          if [[ "${#tarballs[@]}" -ne 1 || ! -f "${tarballs[0]}" ]]; then
+            echo "::error::Expected exactly one tarball in $pack_dir."
+            exit 1
+          fi
+          npm publish "${tarballs[0]}" --provenance --access public

@@ -210,13 +210,13 @@ the rules that changed.
 own changelog. The publish job's `if` and steps can be read in the workflow; they run live in
 phase 9.
 
-- [ ] T021 [US4] Add the component to `release-please-config.json`:
+- [X] T021 [US4] Add the component to `release-please-config.json`:
   - `packages/arch-rules` with `"release-type": "node"`, `"component": "arch-rules"`,
     `"changelog-path": "CHANGELOG.md"` and `"release-as": "1.0.0"`, without
     `bump-minor-pre-major` (research R6);
   - `"packages/arch-rules"` added to the root component's `exclude-paths`;
   - `"packages/arch-rules": "0.0.0"` added to `.release-please-manifest.json`.
-- [ ] T022 [US4] Add a `publish-arch-rules` job to `.github/workflows/release-please.yml`:
+- [X] T022 [US4] Add a `publish-arch-rules` job to `.github/workflows/release-please.yml`:
   - **Trigger**: `needs` the release job, and `if` its
     `outputs['packages/arch-rules--release_created']` is `'true'`. Expose that output from the
     release step.
