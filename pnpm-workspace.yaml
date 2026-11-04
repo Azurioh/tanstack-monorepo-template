@@ -3,3 +3,5 @@ packages:
   - packages/*
 allowBuilds:
   lefthook: false
+minimumReleaseAgeExclude:
+  - "@azurioh/arch-rules"
