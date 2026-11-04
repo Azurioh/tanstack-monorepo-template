@@ -177,7 +177,7 @@ template-side run happens in phase 8.
   - `diffStates(shipped, local, version): Array<{ name, state: "differs" | "missing" | "stale" }>`.
 
   A local file whose first line is not a managed header is ignored by every function (FR-008).
-- [ ] T019 [US3] Add `sync` and `check` to `packages/arch-rules/src/cli.ts` per contracts/cli.md:
+- [X] T019 [US3] Add `sync` and `check` to `packages/arch-rules/src/cli.ts` per contracts/cli.md:
   - **Reading**: read `rules/` from the package directory (resolved from `import.meta.url`) and
     `.claude/rules/arch-rules/` from `--repo`.
   - **`sync`**: writes and removes as planned, then regenerates `AGENTS.md`. When
@@ -187,7 +187,7 @@ template-side run happens in phase 8.
   - **`check`**: prints `<state> .claude/rules/arch-rules/<name>.md` lines, then the remediation
     line. It exits 0 or 1, and exits 0 with `no agent rules folder, skipped` when the repo has
     no `.claude/` directory.
-- [ ] T020 [US3] Create `packages/arch-rules/tests/agent-rules.test.ts`:
+- [X] T020 [US3] Create `packages/arch-rules/tests/agent-rules.test.ts`:
   - **Pure functions**: every state change from data-model.md is covered.
   - **CLI end to end, on a temporary repo**:
     - after `sync`, `check` exits 0;

@@ -1,12 +1,8 @@
-import { spawnSync } from "node:child_process";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { type FeatureTree, findLayoutViolations } from "../src/feature-layout.js";
-
-const CLI_PATH = fileURLToPath(new URL("../dist/cli.js", import.meta.url));
+import { createTemporaryDirectory, removeTemporaryDirectories, runCli } from "./cli-harness.js";
 
 const COMPLIANT_FEATURE: readonly string[] = [
   "server/domain/greeting.ts",
@@ -91,12 +87,9 @@ describe("ARCH-LAYOUT: findLayoutViolations", () => {
   });
 });
 
-const temporaryRepos: string[] = [];
-
 /** A temporary repository holding `files` (empty), removed after each test. */
 async function createRepo(files: readonly string[]): Promise<string> {
-  const repo = await mkdtemp(join(tmpdir(), "arch-rules-layout-"));
-  temporaryRepos.push(repo);
+  const repo = await createTemporaryDirectory("arch-rules-layout-");
   for (const file of files) {
     const path = join(repo, file);
     await mkdir(dirname(path), { recursive: true });
@@ -111,22 +104,17 @@ function featureFiles(params: { featureDirectory: string; files: readonly string
   return files.map((file) => `${featureDirectory}/${file}`);
 }
 
-/** Runs the built CLI as a child process, the way a consumer invokes it. */
-function runCli(args: readonly string[]): {
+/** Runs the built CLI with a fresh, empty home directory. */
+async function runInFreshHome(args: readonly string[]): Promise<{
   status: number | null;
   stdout: string;
   stderr: string;
-} {
-  const result = spawnSync(process.execPath, [CLI_PATH, ...args], { encoding: "utf8" });
-  return { status: result.status, stdout: result.stdout, stderr: result.stderr };
+}> {
+  return runCli({ args, home: await createTemporaryDirectory("arch-rules-home-") });
 }
 
 describe("arch-rules layout (CLI)", () => {
-  afterEach(async () => {
-    await Promise.all(
-      temporaryRepos.splice(0).map((repo) => rm(repo, { recursive: true, force: true })),
-    );
-  });
+  afterEach(removeTemporaryDirectories);
 
   it("reports a violation in the second app and exits 1", async () => {
     const repo = await createRepo([
@@ -140,7 +128,7 @@ describe("arch-rules layout (CLI)", () => {
       }),
     ]);
 
-    const result = runCli(["layout", "--repo", repo]);
+    const result = await runInFreshHome(["layout", "--repo", repo]);
 
     expect(result.status).toBe(1);
     expect(result.stdout).toBe(
@@ -157,14 +145,14 @@ describe("arch-rules layout (CLI)", () => {
       "apps/no-features/src/main.ts",
     ]);
 
-    const result = runCli(["layout", "--repo", repo]);
+    const result = await runInFreshHome(["layout", "--repo", repo]);
 
     expect(result.status).toBe(0);
     expect(result.stdout).toBe("");
   });
 
-  it("rejects an unknown command with a usage error and exits 2", () => {
-    const result = runCli(["unknown"]);
+  it("rejects an unknown command with a usage error and exits 2", async () => {
+    const result = await runInFreshHome(["unknown"]);
 
     expect(result.status).toBe(2);
     expect(result.stderr).toContain("usage: arch-rules");
