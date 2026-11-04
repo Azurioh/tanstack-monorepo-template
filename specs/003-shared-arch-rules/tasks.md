@@ -322,10 +322,10 @@ copies, and everything is green.
     `node_modules/@azurioh/arch-rules`.
   - Run `biome lint` and assert the id appears.
   - No compliant cases and no completeness check (SC-004).
-- [ ] T034 [US1] Add a root script `arch` (`arch-rules check && arch-rules layout`) and run it
+- [X] T034 [US1] Add a root script `arch` (`arch-rules check && arch-rules layout`) and run it
   from `check`. Wire it as a root Turborepo task, `//#arch`, added to the `check` task list, so
   the required `check` CI job runs it.
-- [ ] T035 [US3] Run `pnpm exec arch-rules sync`:
+- [X] T035 [US3] Run `pnpm exec arch-rules sync`:
   - It writes `.claude/rules/arch-rules/{clean-architecture,errors,ui,arch-enforcement}.md`.
   - Delete `.claude/rules/{clean-architecture,errors,ui}.md`.
   - Remove from `.claude/rules/architecture.md` everything that moved to `arch-enforcement.md`.

@@ -60,6 +60,8 @@ it contains — retarget it before reviewing.
 - **One accepted global**: `globalThis.$rpcServerClient`, the in-process oRPC client for
   server-side rendering (oRPC's "Optimize SSR" pattern, ADR 0011). Only the composition root
   sets it; only `shared/client/rpc-client.ts` reads it. No other global.
+- **App layout, layer mapping, errors and UI** live in `.claude/rules/arch-rules/`, synced from
+  `@azurioh/arch-rules` (`pnpm exec arch-rules sync`); never edit those files here.
 
 <!-- conventions:begin architecture.ports -->
 - **Ports and adapters everywhere.** Never reach an external dependency (DB,
@@ -128,65 +130,6 @@ Mirrored layout: a test sits at the source path under `tests/unit/`, minus the `
 | e2e | `src/routes/**` | `tests/e2e` | end-to-end (Playwright, production build) |
 | other | `src/**` | `tests/unit` | unit |
 
-## App layout (every `apps/*`, ADR 0010)
-
-- A feature is exactly `server/{domain,application/ports,infrastructure,rpc}`,
-  `client/{api,hooks,components,pages,copy.ts}`, `schemas.ts`, `index.ts` (client entry),
-  `server.ts` (server entry, `create<Feature>UseCases` factory) and `testing.ts` (test twins).
-  Anything else fails `ARCH-LAYOUT` (`apps/web/tests/architecture/layout.test.ts`).
-- Cross-feature code lives in `src/shared/{domain,server,client}`.
-  `src/shared/server/composition-root.ts` is the only file that binds ports to adapters and the
-  only file that reads `process.env` (through `loadEnv` in `shared/server/config/env.ts`).
-- Adding a feature = copying the demo feature folder, its tests, and one line each in
-  `shared/server/rpc/router.ts` and `composition-root.ts`. Removing it = the reverse.
-- Import rules are lint errors with a stable id (`biome.jsonc`, `scripts/biome/*.grit`); each
-  rule has a violating and a compliant fixture in `apps/web/tests/architecture/rules.test.ts`:
-  - `ARCH-LAYER` — a layer imports only itself and inner layers (domain ← application ←
-    infrastructure ← rpc); page routes never import `shared/server`; `routes/api/` imports only
-    `shared/server/composition-root` from it.
-  - `ARCH-FEATURE` — no feature imports another; `shared/` imports a feature's `server.ts`
-    only from the composition root and the RPC router; routes import a feature's `index.ts`.
-  - `ARCH-CLIENT-SERVER` — client code imports server code with a top-level `import type`
-    only (inline `import { type X }` is rejected); Start import protection is the build backstop.
-  - `ARCH-VENDOR` — vendor SDKs only in `server/infrastructure/` and `shared/server/adapters/`;
-    the list is the regex in `scripts/biome/vendor-sdks.grit`.
-  - `ARCH-REEXPORT` — `export … from` only in a feature's `index.ts`, `server.ts`, `testing.ts`.
-  - `ARCH-RELATIVE` — no `../` import inside an app; use `@/…`.
-- A new layer, feature entry or rule updates `biome.jsonc`, the fixtures, the layout test and
-  ADR 0010 in the same PR. A lint error from these rules means move the code, never suppress it.
-
-## .claude/rules/clean-architecture.md
-
-# Clean architecture (every `apps/*`, ADR 0003)
-
-How the generic rules of `architecture.md` map onto a feature's `server/` folders.
-
-- **Domain** (`server/domain/`): entities and value objects with a `create` factory that checks
-  the invariants and throws a business error; immutable (a change returns a new value); no
-  import of a framework, `zod`, `@orpc/*` or any vendor package (`ARCH-VENDOR`). Business errors
-  of the feature live in one `<feature>-error.ts` and extend the `shared/domain/errors.ts`
-  taxonomy.
-- **Application** (`server/application/`): one class per use case, one `execute` method, ports
-  injected through the constructor. Ports are interfaces in `application/ports/`, named after
-  the business need (`GreetingRepository`), never after a technology. Cross-feature ports
-  (`Clock`, `IdGenerator`) live in `shared/server/ports/`. A use case returns a DTO built by a
-  mapper in the application layer; an entity never leaves it.
-- **Infrastructure** (`server/infrastructure/`): adapters implementing the ports. Every port has
-  an `in-memory-<port>.ts` twin; every adapter of a port runs the same contract suite
-  (`tests/contracts/<port>.contract.ts`), so the twin and the real adapter cannot drift.
-- **Transport** (`server/rpc/<feature>-procedures.ts`): a `create<Feature>Procedures(useCases)`
-  factory; each procedure validates its input with the feature's `schemas.ts`, calls one use
-  case and returns its DTO. No business decision in a procedure, no error mapping per feature
-  (the shared base procedure maps errors, see `errors.md`).
-- **Wiring**: `server.ts` exports `create<Feature>UseCases(deps)`, the only file outside
-  infrastructure that names an adapter. `shared/server/composition-root.ts` calls it once per
-  process with the shared adapters and the validated settings; the router mounts its procedures.
-- **Settings**: a feature declares its environment variables in `server.ts`; the composition
-  root validates every declared variable at startup and refuses to start, naming each invalid
-  one. Code under `features/` never reads `process.env`.
-- **Tests**: domain and application are tested with in-memory twins and fixed clocks or id
-  generators from `testing.ts`; never a mock of an internal module.
-
 ## .claude/rules/coding.md
 
 # Coding
@@ -250,34 +193,6 @@ How the generic rules of `architecture.md` map onto a feature's `server/` folder
   re-running the case that set it.
 <!-- conventions:end coding.dependencies -->
 
-## .claude/rules/errors.md
-
-# Errors and logging (every app and package)
-
-- **No silent error.** A caught error is handled (the code continues with a stated fallback) or
-  rethrown. A `catch` that only logs logs at `warn` or above with the original error attached and
-  a comment saying why the flow continues. Empty `catch` blocks and `.catch(() => {})` are
-  defects.
-- **One business-error taxonomy.** Expected failures extend `DomainError`
-  (`src/shared/domain/errors.ts`): a `kind` the transport maps and a stable SCREAMING_SNAKE_CASE
-  `code` the client maps to copy. The error's `message` is English, for logs only, never shown.
-- **One mapping point.** `mapErrors` in `src/shared/server/rpc/errors.ts` turns a business error
-  the caller can fix into `BAD_REQUEST` with `data: { code }`, and any other error into
-  `INTERNAL_SERVER_ERROR` with `data: { referenceId }`, logged once with that reference. A
-  procedure never builds an `ORPCError` itself and never leaks a stack or an internal message.
-- **Shared schemas speak in codes.** A zod issue message in `schemas.ts` is a business code, so a
-  rejected input reaches the client in the same `{ code }` shape as a domain error.
-- **Explicit to the user.** The client maps every known code to a sentence in the feature's
-  `client/copy.ts` (a `satisfies Record<Code, string>` keeps the map complete) that names what
-  failed and what to do. The generic message is only for unexpected errors, and shows the
-  reference id when the server returned one.
-- **Structured logs only**, through the injected `Logger` (`shared/server/logging/logger.ts`):
-  one JSON object per line, context in fields, never `console.*`, never string concatenation.
-  Errors are logged once, at the boundary that handles them; inner layers throw.
-- **Never in a log or an error message**: secrets, tokens, cookies, authorization headers,
-  personal data beyond an id. The logger redacts secret-looking field names; do not rely on it
-  for values placed in the message text.
-
 ## .claude/rules/knowledge.md
 
 # Capturing knowledge while working
@@ -327,46 +242,6 @@ Format: `- YYYY-MM-DD — symptom → cause → fix`. See `knowledge.md` for whe
   → the release commit reached `staging` only squashed, so `main` was never an ancestor of `demo`
   → the release workflow also back-merges `main → demo` with a merge commit (ADR 0006); if it did
   not run, merge `main` into `demo` through a `chore: merge main into demo` PR.
-
-## .claude/rules/ui.md
-
-# UI (every app, ADR 0007)
-
-1. **shadcn first, minimal hand-written HTML.** Every control is a `@repo/ui` component
-   (`import { Button } from '@repo/ui/components/button'`). Order: an existing `@repo/ui`
-   component; a composition of them in the feature's `client/components/`; a new shadcn component
-   added to `packages/ui`; a custom component only when no shadcn item covers the need, with a
-   header comment saying why. Hand-rolled buttons, inputs, alerts and card-like `div`s are
-   defects. `packages/ui` components are owned code (ADR 0007), not vendored: change them there, once,
-   never per screen.
-2. **Sizes and variants are props.** `size` / `variant` only; no height or padding overrides on
-   `@repo/ui` components. Tap targets are the package's job: the default `Button`, icon `Button`
-   and `Input` are 44 px (`h-11` / `size-11`); never use a smaller size for a primary touch
-   control. `w-full` only where the layout needs it (for example a submit button on phones,
-   `w-full sm:w-auto`).
-3. **Tokens only.** Semantic Tailwind tokens from `@repo/ui/theme.css` (`bg-primary`,
-   `text-muted-foreground`, `text-destructive`, `border-border`…). Never hex values, palette
-   colours (`gray-*`, `zinc-*`) or arbitrary `[#…]` colours.
-4. **View / ViewModel split.** A View (`client/components/`) renders props and calls callbacks:
-   no data fetching, no state beyond local presentation. A ViewModel (`client/hooks/use-*.ts`)
-   owns state, queries, mutations and actions, and returns exactly the View's props. A page
-   (`client/pages/`) composes ViewModels and Views; a route file only mounts the page and runs
-   its loader.
-5. **Forms: zod + `useReducer`, no form library.** The feature's `schemas.ts` holds the zod
-   schema shared with the procedure input; the ViewModel validates with it before submitting,
-   keeps the form state in a `useReducer` with an explicit status (`idle`, `invalid`,
-   `submitting`, `succeeded`, `failed`) and ignores results of superseded submissions.
-6. **Data**: reads go through the route loader (`ensureQueryData`) and the same query options in
-   the ViewModel, built from the oRPC TanStack Query utils in `client/api/`; a mutation
-   invalidates the queries it changes. No `fetch` in a component.
-7. **Copy lives in `client/copy.ts`**, English only, never as a literal in a component; error
-   copy is keyed by business code (`errors.md`).
-8. **Accessibility**: every input has a `Label`; a field error is linked with `aria-describedby`
-   and announced (`role="alert"`); a request-level error uses `Alert`; one `h1` per page.
-9. **Mobile-first, then desktop.** Layout starts at phone width and adds `sm:` / `md:` variants;
-   no hover-only affordance, no horizontal scroll at 375 px.
-10. **Before "done"**: the screen is checked at 375 px and at desktop width, every interactive
-    element is at least 44 px on touch, and the end-to-end test of the flow passes.
 
 ## .claude/rules/workflow.md
 
@@ -464,8 +339,9 @@ Format: `- YYYY-MM-DD — symptom → cause → fix`. See `knowledge.md` for whe
   (see `knowledge.md`).
 <!-- conventions:end workflow.verification -->
 
-- Layer mapping and wiring → `clean-architecture.md`; error taxonomy and logging →
-  `errors.md`; UI components, forms and tap targets → `ui.md`.
+- Layer mapping and wiring → `arch-rules/clean-architecture.md`; error taxonomy and logging →
+  `arch-rules/errors.md`; UI components, forms and tap targets → `arch-rules/ui.md`; app layout
+  and `ARCH-*` lint rules → `arch-rules/arch-enforcement.md`.
 
 <!-- conventions:begin workflow.agents-md -->
 ## AGENTS.md (Codex)
@@ -476,6 +352,143 @@ Format: `- YYYY-MM-DD — symptom → cause → fix`. See `knowledge.md` for whe
 - `knowledge.md` and `pitfalls.md` are shared by Claude and Codex — a trap
   recorded by either one is read by both.
 <!-- conventions:end workflow.agents-md -->
+
+## .claude/rules/arch-rules/arch-enforcement.md
+
+<!-- managed by @azurioh/arch-rules@1.0.0: edit upstream, run arch-rules sync -->
+# Architecture enforcement (every `apps/*`, `@azurioh/arch-rules`)
+
+## App layout
+
+- A feature is exactly `server/{domain,application/ports,infrastructure,rpc}`,
+  `client/{api,hooks,components,pages,copy.ts}`, `schemas.ts`, `index.ts` (client entry),
+  `server.ts` (server entry, `create<Feature>UseCases` factory) and `testing.ts` (test twins).
+  Anything else fails `ARCH-LAYOUT` (`arch-rules layout`, run on `apps/*/src/features/*`).
+- Cross-feature code lives in `src/shared/{domain,server,client}`.
+  `src/shared/server/composition-root.ts` is the only file that binds ports to adapters and the
+  only file that reads `process.env` (through `loadEnv` in `shared/server/config/env.ts`).
+- Adding a feature = copying an existing feature folder, its tests, and one line each in
+  `shared/server/rpc/router.ts` and `composition-root.ts`. Removing it = the reverse.
+- Import rules are lint errors with a stable id, enabled by extending `@azurioh/arch-rules/biome`
+  in `biome.jsonc`; each rule is proven by a violating and a compliant fixture inside the
+  package:
+  - `ARCH-LAYER` — a layer imports only itself and inner layers (domain ← application ←
+    infrastructure ← rpc); page routes never import `shared/server`; `routes/api/` imports only
+    `shared/server/composition-root` from it.
+  - `ARCH-FEATURE` — no feature imports another; `shared/` imports a feature's `server.ts`
+    only from the composition root and the RPC router; routes import a feature's `index.ts`.
+  - `ARCH-CLIENT-SERVER` — client code imports server code with a top-level `import type`
+    only (inline `import { type X }` is rejected); Start import protection is the build backstop.
+  - `ARCH-VENDOR` — vendor SDKs only in `server/infrastructure/` and `shared/server/adapters/`;
+    the list is the regex in the package's `plugins/vendor-sdks.grit`.
+  - `ARCH-REEXPORT` — `export … from` only in a feature's `index.ts`, `server.ts`, `testing.ts`.
+  - `ARCH-RELATIVE` — no `../` import inside an app; use `@/…`.
+- A new layer, feature entry or rule is added in `@azurioh/arch-rules` (preset, fixtures, README
+  rules table), never patched locally. A lint error from these rules means move the code, never
+  suppress it.
+
+## .claude/rules/arch-rules/clean-architecture.md
+
+<!-- managed by @azurioh/arch-rules@1.0.0: edit upstream, run arch-rules sync -->
+# Clean architecture (every `apps/*`, ADR 0003)
+
+How the generic rules of `architecture.md` map onto a feature's `server/` folders.
+
+- **Domain** (`server/domain/`): entities and value objects with a `create` factory that checks
+  the invariants and throws a business error; immutable (a change returns a new value); no
+  import of a framework, `zod`, `@orpc/*` or any vendor package (`ARCH-VENDOR`). Business errors
+  of the feature live in one `<feature>-error.ts` and extend the `shared/domain/errors.ts`
+  taxonomy.
+- **Application** (`server/application/`): one class per use case, one `execute` method, ports
+  injected through the constructor. Ports are interfaces in `application/ports/`, named after
+  the business need (`GreetingRepository`), never after a technology. Cross-feature ports
+  (`Clock`, `IdGenerator`) live in `shared/server/ports/`. A use case returns a DTO built by a
+  mapper in the application layer; an entity never leaves it.
+- **Infrastructure** (`server/infrastructure/`): adapters implementing the ports. Every port has
+  an `in-memory-<port>.ts` twin; every adapter of a port runs the same contract suite
+  (`tests/contracts/<port>.contract.ts`), so the twin and the real adapter cannot drift.
+- **Transport** (`server/rpc/<feature>-procedures.ts`): a `create<Feature>Procedures(useCases)`
+  factory; each procedure validates its input with the feature's `schemas.ts`, calls one use
+  case and returns its DTO. No business decision in a procedure, no error mapping per feature
+  (the shared base procedure maps errors, see `errors.md`).
+- **Wiring**: `server.ts` exports `create<Feature>UseCases(deps)`, the only file outside
+  infrastructure that names an adapter. `shared/server/composition-root.ts` calls it once per
+  process with the shared adapters and the validated settings; the router mounts its procedures.
+- **Settings**: a feature declares its environment variables in `server.ts`; the composition
+  root validates every declared variable at startup and refuses to start, naming each invalid
+  one. Code under `features/` never reads `process.env`.
+- **Tests**: domain and application are tested with in-memory twins and fixed clocks or id
+  generators from `testing.ts`; never a mock of an internal module.
+
+## .claude/rules/arch-rules/errors.md
+
+<!-- managed by @azurioh/arch-rules@1.0.0: edit upstream, run arch-rules sync -->
+# Errors and logging (every app and package)
+
+- **No silent error.** A caught error is handled (the code continues with a stated fallback) or
+  rethrown. A `catch` that only logs logs at `warn` or above with the original error attached and
+  a comment saying why the flow continues. Empty `catch` blocks and `.catch(() => {})` are
+  defects.
+- **One business-error taxonomy.** Expected failures extend `DomainError`
+  (`src/shared/domain/errors.ts`): a `kind` the transport maps and a stable SCREAMING_SNAKE_CASE
+  `code` the client maps to copy. The error's `message` is English, for logs only, never shown.
+- **One mapping point.** `mapErrors` in `src/shared/server/rpc/errors.ts` turns a business error
+  the caller can fix into `BAD_REQUEST` with `data: { code }`, and any other error into
+  `INTERNAL_SERVER_ERROR` with `data: { referenceId }`, logged once with that reference. A
+  procedure never builds an `ORPCError` itself and never leaks a stack or an internal message.
+- **Shared schemas speak in codes.** A zod issue message in `schemas.ts` is a business code, so a
+  rejected input reaches the client in the same `{ code }` shape as a domain error.
+- **Explicit to the user.** The client maps every known code to a sentence in the feature's
+  `client/copy.ts` (a `satisfies Record<Code, string>` keeps the map complete) that names what
+  failed and what to do. The generic message is only for unexpected errors, and shows the
+  reference id when the server returned one.
+- **Structured logs only**, through the injected `Logger` (`shared/server/logging/logger.ts`):
+  one JSON object per line, context in fields, never `console.*`, never string concatenation.
+  Errors are logged once, at the boundary that handles them; inner layers throw.
+- **Never in a log or an error message**: secrets, tokens, cookies, authorization headers,
+  personal data beyond an id. The logger redacts secret-looking field names; do not rely on it
+  for values placed in the message text.
+
+## .claude/rules/arch-rules/ui.md
+
+<!-- managed by @azurioh/arch-rules@1.0.0: edit upstream, run arch-rules sync -->
+# UI (every app, ADR 0007)
+
+1. **shadcn first, minimal hand-written HTML.** Every control is a `@repo/ui` component
+   (`import { Button } from '@repo/ui/components/button'`). Order: an existing `@repo/ui`
+   component; a composition of them in the feature's `client/components/`; a new shadcn component
+   added to `packages/ui`; a custom component only when no shadcn item covers the need, with a
+   header comment saying why. Hand-rolled buttons, inputs, alerts and card-like `div`s are
+   defects. `packages/ui` components are owned code (ADR 0007), not vendored: change them there, once,
+   never per screen.
+2. **Sizes and variants are props.** `size` / `variant` only; no height or padding overrides on
+   `@repo/ui` components. Tap targets are the package's job: the default `Button`, icon `Button`
+   and `Input` are 44 px (`h-11` / `size-11`); never use a smaller size for a primary touch
+   control. `w-full` only where the layout needs it (for example a submit button on phones,
+   `w-full sm:w-auto`).
+3. **Tokens only.** Semantic Tailwind tokens from `@repo/ui/theme.css` (`bg-primary`,
+   `text-muted-foreground`, `text-destructive`, `border-border`…). Never hex values, palette
+   colours (`gray-*`, `zinc-*`) or arbitrary `[#…]` colours.
+4. **View / ViewModel split.** A View (`client/components/`) renders props and calls callbacks:
+   no data fetching, no state beyond local presentation. A ViewModel (`client/hooks/use-*.ts`)
+   owns state, queries, mutations and actions, and returns exactly the View's props. A page
+   (`client/pages/`) composes ViewModels and Views; a route file only mounts the page and runs
+   its loader.
+5. **Forms: zod + `useReducer`, no form library.** The feature's `schemas.ts` holds the zod
+   schema shared with the procedure input; the ViewModel validates with it before submitting,
+   keeps the form state in a `useReducer` with an explicit status (`idle`, `invalid`,
+   `submitting`, `succeeded`, `failed`) and ignores results of superseded submissions.
+6. **Data**: reads go through the route loader (`ensureQueryData`) and the same query options in
+   the ViewModel, built from the oRPC TanStack Query utils in `client/api/`; a mutation
+   invalidates the queries it changes. No `fetch` in a component.
+7. **Copy lives in `client/copy.ts`**, English only, never as a literal in a component; error
+   copy is keyed by business code (`errors.md`).
+8. **Accessibility**: every input has a `Label`; a field error is linked with `aria-describedby`
+   and announced (`role="alert"`); a request-level error uses `Alert`; one `h1` per page.
+9. **Mobile-first, then desktop.** Layout starts at phone width and adds `sm:` / `md:` variants;
+   no hover-only affordance, no horizontal scroll at 375 px.
+10. **Before "done"**: the screen is checked at 375 px and at desktop width, every interactive
+    element is at least 44 px on touch, and the end-to-end test of the flow passes.
 
 ## Scoped rules
 

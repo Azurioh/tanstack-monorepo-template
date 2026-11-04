@@ -1,3 +1,4 @@
+<!-- managed by @azurioh/arch-rules@1.0.0: edit upstream, run arch-rules sync -->
 # Clean architecture (every `apps/*`, ADR 0003)
 
 How the generic rules of `architecture.md` map onto a feature's `server/` folders.

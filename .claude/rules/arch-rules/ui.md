@@ -1,3 +1,4 @@
+<!-- managed by @azurioh/arch-rules@1.0.0: edit upstream, run arch-rules sync -->
 # UI (every app, ADR 0007)
 
 1. **shadcn first, minimal hand-written HTML.** Every control is a `@repo/ui` component

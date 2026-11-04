@@ -16,6 +16,8 @@
 - **One accepted global**: `globalThis.$rpcServerClient`, the in-process oRPC client for
   server-side rendering (oRPC's "Optimize SSR" pattern, ADR 0011). Only the composition root
   sets it; only `shared/client/rpc-client.ts` reads it. No other global.
+- **App layout, layer mapping, errors and UI** live in `.claude/rules/arch-rules/`, synced from
+  `@azurioh/arch-rules` (`pnpm exec arch-rules sync`); never edit those files here.
 
 <!-- conventions:begin architecture.ports -->
 - **Ports and adapters everywhere.** Never reach an external dependency (DB,
@@ -84,29 +86,3 @@ Mirrored layout: a test sits at the source path under `tests/unit/`, minus the `
 | e2e | `src/routes/**` | `tests/e2e` | end-to-end (Playwright, production build) |
 | other | `src/**` | `tests/unit` | unit |
 
-## App layout (every `apps/*`, ADR 0010)
-
-- A feature is exactly `server/{domain,application/ports,infrastructure,rpc}`,
-  `client/{api,hooks,components,pages,copy.ts}`, `schemas.ts`, `index.ts` (client entry),
-  `server.ts` (server entry, `create<Feature>UseCases` factory) and `testing.ts` (test twins).
-  Anything else fails `ARCH-LAYOUT` (`apps/web/tests/architecture/layout.test.ts`).
-- Cross-feature code lives in `src/shared/{domain,server,client}`.
-  `src/shared/server/composition-root.ts` is the only file that binds ports to adapters and the
-  only file that reads `process.env` (through `loadEnv` in `shared/server/config/env.ts`).
-- Adding a feature = copying the demo feature folder, its tests, and one line each in
-  `shared/server/rpc/router.ts` and `composition-root.ts`. Removing it = the reverse.
-- Import rules are lint errors with a stable id (`biome.jsonc`, `scripts/biome/*.grit`); each
-  rule has a violating and a compliant fixture in `apps/web/tests/architecture/rules.test.ts`:
-  - `ARCH-LAYER` — a layer imports only itself and inner layers (domain ← application ←
-    infrastructure ← rpc); page routes never import `shared/server`; `routes/api/` imports only
-    `shared/server/composition-root` from it.
-  - `ARCH-FEATURE` — no feature imports another; `shared/` imports a feature's `server.ts`
-    only from the composition root and the RPC router; routes import a feature's `index.ts`.
-  - `ARCH-CLIENT-SERVER` — client code imports server code with a top-level `import type`
-    only (inline `import { type X }` is rejected); Start import protection is the build backstop.
-  - `ARCH-VENDOR` — vendor SDKs only in `server/infrastructure/` and `shared/server/adapters/`;
-    the list is the regex in `scripts/biome/vendor-sdks.grit`.
-  - `ARCH-REEXPORT` — `export … from` only in a feature's `index.ts`, `server.ts`, `testing.ts`.
-  - `ARCH-RELATIVE` — no `../` import inside an app; use `@/…`.
-- A new layer, feature entry or rule updates `biome.jsonc`, the fixtures, the layout test and
-  ADR 0010 in the same PR. A lint error from these rules means move the code, never suppress it.
