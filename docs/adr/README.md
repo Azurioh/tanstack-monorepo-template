@@ -16,7 +16,7 @@ Each long-term decision of this template is recorded here. The process itself is
 | [0007](./0007-ui-layer.md)                                | UI layer                                | Accepted (amended 2026-10-26)          | `apps/*`, shared UI packages                                  |
 | [0008](./0008-deployment.md)                              | Deployment                              | Accepted (not yet implemented, spec 3) | `apps/*`, `.github/workflows/`                                |
 | [0009](./0009-per-pr-previews.md)                         | Opt-in per-pull-request previews        | Accepted (not yet implemented, spec 3) | `apps/*`, `.github/workflows/`, deployment                    |
-| [0010](./0010-app-layout-and-architecture-enforcement.md) | App layout and architecture enforcement | Accepted                               | `apps/*`, `biome.jsonc`, `scripts/biome/`                     |
+| [0010](./0010-app-layout-and-architecture-enforcement.md) | App layout and architecture enforcement | Accepted (amended 2026-11-04)          | `apps/*`, `biome.jsonc`, `@azurioh/arch-rules`                |
 | [0011](./0011-rpc-transport.md)                           | RPC transport                           | Accepted                               | `apps/*`, `src/shared/server/rpc/`, `src/routes/api/`         |
 | [0012](./0012-shared-architecture-rules-package.md)       | Shared architecture rules package       | Accepted                               | `packages/arch-rules`, root `biome.jsonc`, generated projects |
 

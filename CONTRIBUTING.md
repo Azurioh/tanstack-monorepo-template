@@ -76,7 +76,8 @@ feat(arch-rules)!: ARCH-LAYER rejects rpc imports from client code
 fix(arch-rules): ARCH-VENDOR no longer flags type-only imports
 ```
 
-The release publishes the package to npm, and projects receive it as a dependency update. See
+The release publishes the package to npm, and projects, this template included, receive it as a
+dependency update (then run `pnpm exec arch-rules sync`). See
 [ADR 0012](./docs/adr/0012-shared-architecture-rules-package.md) and the
 [package README](./packages/arch-rules/README.md#versioning).
 

@@ -59,7 +59,7 @@ caches data.
   generation.
 - `@orpc/*` stays at the transport edge: `server/rpc/`, `shared/server/rpc/`, `shared/client/`
   and a feature's `client/api/`. Domain and application code never import it; the rules in
-  `.claude/rules/clean-architecture.md` state it and review enforces it, since the
+  `.claude/rules/arch-rules/clean-architecture.md` state it and review enforces it, since the
   `ARCH-VENDOR` list targets infrastructure SDKs.
 - Errors cross the wire as `ORPCError` data (`{ code }` or `{ referenceId }`); the client reads
   them in one place per feature (`client/api/`) and maps codes to copy.

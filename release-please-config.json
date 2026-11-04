@@ -18,8 +18,7 @@
     "packages/arch-rules": {
       "release-type": "node",
       "component": "arch-rules",
-      "changelog-path": "CHANGELOG.md",
-      "release-as": "1.0.0"
+      "changelog-path": "CHANGELOG.md"
     }
   }
 }
