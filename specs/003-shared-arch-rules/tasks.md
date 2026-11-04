@@ -158,9 +158,9 @@ consumer copies identical.
 **Independent Test**: quickstart §4, run against a temporary repo in the package tests. The
 template-side run happens in phase 8.
 
-- [ ] T016 [P] [US3] Copy `.claude/rules/{clean-architecture,errors,ui}.md` to
+- [X] T016 [P] [US3] Copy `.claude/rules/{clean-architecture,errors,ui}.md` to
   `packages/arch-rules/rules/` unchanged.
-- [ ] T017 [P] [US3] Create `packages/arch-rules/rules/arch-enforcement.md` from the part of
+- [X] T017 [P] [US3] Create `packages/arch-rules/rules/arch-enforcement.md` from the part of
   `.claude/rules/architecture.md` that sits outside the `conventions:begin/end` markers:
   - **Include**: the "App layout" section and the `ARCH-*` list. `ARCH-LAYOUT` now points to
     `arch-rules layout` instead of `layout.test.ts`; the rules now point to the package instead
