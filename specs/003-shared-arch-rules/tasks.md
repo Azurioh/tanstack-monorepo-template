@@ -141,7 +141,7 @@ and names it. Restore it, and the test passes (quickstart §1).
   Keep every existing fixture and the completeness assertion.
 - [X] T014 [US2] In `packages/arch-rules/tests/rules.test.ts`, add one fixture per `ARCH-*` id
   under a second app path (`apps/other/src`), proving that the globs match any app.
-- [ ] T015 [US2] Add a test asserting that the packed tarball holds exactly the published file
+- [X] T015 [US2] Add a test asserting that the packed tarball holds exactly the published file
   set: `npm pack --dry-run --json` lists `dist/cli.js`, `preset.jsonc`, `biome-manifest.jsonc`,
   `plugins/*.grit` and `rules/*.md`, and no `tests/` and no `src/`. File:
   `packages/arch-rules/tests/package-files.test.ts`.
