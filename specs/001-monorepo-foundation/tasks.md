@@ -144,12 +144,12 @@ US4 docs/ADRs).
 **Purpose**: remote verification, open risks, final cleanliness
 
 - [X] T056 Run full `pnpm check` and `shellcheck scripts/setup-repo.sh` one last time: zero errors, zero warnings
-- [ ] T057 With the maintainer's OK, commit (Conventional Commits) and push to `azurioh/tanstack-monorepo-template` `main`, then run `scripts/setup-repo.sh --template` on it
-- [ ] T058 V: quickstart §3 on a throwaway repository created from the template — rulesets active on a public personal repository (open risk 3), second run idempotent, direct push rejected
-- [ ] T059 V: quickstart §4 and §5 — invalid PR title blocked, squash-only into `staging`, merge-commit-only promotions with no branch divergence, release PR opened after first `main` merge listing the feature commits
-- [ ] T060 V: quickstart §6 — Dependabot parses the pnpm 12 lockfile and opens PRs on `staging` (open risk 2); if unsupported, record the outcome and mitigation in docs/adr/0005-dependency-versioning-and-releases.md
-- [ ] T061 V: quickstart §7 and §9 — community profile complete, description + topics set, < 15 min to protected project
-- [ ] T062 Delete the throwaway repository and mark checklists complete
+- [X] T057 With the maintainer's OK, commit (Conventional Commits) and push to `azurioh/tanstack-monorepo-template` `main`, then run `scripts/setup-repo.sh --template` on it
+- [X] T058 V: quickstart §3 on a throwaway repository created from the template — rulesets active on a public personal repository (open risk 3), second run idempotent, direct push rejected
+- [X] T059 V: quickstart §4 and §5 — invalid PR title blocked, squash-only into `staging`, merge-commit-only promotions with no branch divergence (one divergence `demo`/`main` found on the 0.2.0 promotion, fixed by the `main` → `demo` back-merge), release PR opened after first `main` merge listing the feature commits
+- [X] T060 V: quickstart §6 — Dependabot parses the pnpm 12 lockfile and opens PRs on `staging` (open risk 2); if unsupported, record the outcome and mitigation in docs/adr/0005-dependency-versioning-and-releases.md — not yet observed (no Dependabot run so far); the maintainer accepted it as the open risk ADR 0005 records
+- [X] T061 V: quickstart §7 and §9 — community profile complete, description + topics set, < 15 min to protected project
+- [X] T062 Delete the throwaway repository and mark checklists complete
 
 ---
 

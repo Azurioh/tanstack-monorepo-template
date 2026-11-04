@@ -15,7 +15,8 @@
 
 - Release flow (ADR 0006): feature PRs are squash-merged into `staging`; promotions
   `staging → demo → main` are merge-commit PRs, never squashed or rebased; release-please opens
-  the release PR on `main`, then a back-merge PR `main → staging` merges itself.
+  the release PR on `main`, then back-merge PRs `main → staging` (squash) and `main → demo`
+  (merge commit) merge themselves.
 - Commit and PR titles are checked by commitlint (`pr-title` job); scopes are optional.
 - Required checks on `staging`, `demo` and `main` = the CI job names `check`, `pr-title`, `e2e`,
   `agents-md` (`.github/rulesets/*.json`). A renamed or added job changes all three rulesets in

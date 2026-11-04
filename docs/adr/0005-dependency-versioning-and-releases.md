@@ -49,7 +49,7 @@ pins need an automated update channel, and automated releases need a machine-rea
   `chore: release main`, that bumps each package with releasable commits.
 - A new package starts at `0.0.0` in `.release-please-manifest.json` with
   `initial-version: "0.1.0"` and `bump-minor-pre-major: true` in its config entry (see below).
-- After each release, `main` is back-merged into `staging` automatically (see ADR 0006).
+- After each release, `main` is back-merged into `staging` and `demo` automatically (see ADR 0006).
 
 **0.x versioning**
 - The first release is `0.1.0`, not `1.0.0`. The manifest starts at `0.0.0`, which release-please
