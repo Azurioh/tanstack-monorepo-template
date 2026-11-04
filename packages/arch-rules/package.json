@@ -9,6 +9,9 @@
     "url": "git+https://github.com/Azurioh/tanstack-monorepo-template.git",
     "directory": "packages/arch-rules"
   },
+  "exports": {
+    "./biome": "./preset.jsonc"
+  },
   "bin": {
     "arch-rules": "./dist/cli.js"
   },
