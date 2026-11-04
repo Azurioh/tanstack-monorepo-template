@@ -26,6 +26,7 @@ const PACKED_DIRECTORIES: readonly PackedDirectory[] = [
     packedDir: "plugins",
     packedExtension: ".grit",
   },
+  { sourceDir: "rules", sourceExtension: ".md", packedDir: "rules", packedExtension: ".md" },
 ];
 // biome-manifest.jsonc references each plugin by path; a dropped file would break consumers.
 const GRIT_PLUGIN_COUNT = 4;
