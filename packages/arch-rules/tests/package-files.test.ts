@@ -5,8 +5,8 @@ import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
 
 const PACKAGE_DIR = fileURLToPath(new URL("../", import.meta.url));
-// npm packs package.json and LICENSE whatever `files` says (README too, but the package has none).
-const ALWAYS_PACKED: readonly string[] = ["package.json", "LICENSE"];
+// npm packs package.json, LICENSE and README.md whatever `files` says.
+const ALWAYS_PACKED: readonly string[] = ["package.json", "LICENSE", "README.md"];
 const PACKED_ROOT_FILES: readonly string[] = ["preset.jsonc", "biome-manifest.jsonc"];
 
 interface PackedDirectory {

@@ -234,7 +234,7 @@ phase 9.
        `@repo/tsconfig`), then `npm publish <tgz> --provenance --access public`.
   - **No token secret.** Confirm the v5 output key name on the release-please-action v5 README
     before writing the `if`.
-- [ ] T023 [US4] Write `packages/arch-rules/README.md` with these sections:
+- [X] T023 [US4] Write `packages/arch-rules/README.md` with these sections:
   - **Rules**: a table of id, what it forbids, and the paths it applies to.
   - **Adopt**:
     1. `pnpm add -E -D @azurioh/arch-rules` at the root;
@@ -254,7 +254,7 @@ phase 9.
     npmjs.com.
 
   No private names (FR-014, FR-015).
-- [ ] T024 [P] [US4] Write `docs/adr/0012-shared-architecture-rules-package.md`:
+- [X] T024 [P] [US4] Write `docs/adr/0012-shared-architecture-rules-package.md`:
   - Header and sections: Status Accepted, Date 2026-10-30, Applies to the repo and every project
     created from it; Context, Decision, Consequences.
   - Content: the decisions R1–R9 in short, and the rule "a project adds rules through Grit
@@ -265,13 +265,13 @@ phase 9.
 
 ## Phase 6: Polish before release (group C)
 
-- [ ] T025 [P] Update `CONTRIBUTING.md` and the root `README.md`:
+- [X] T025 [P] Update `CONTRIBUTING.md` and the root `README.md`:
   - a rule change happens in `packages/arch-rules`;
   - its commit uses scope `arch-rules` and names the rule ids in the subject (for example
     `feat(arch-rules)!: ARCH-LAYER rejects …`), so the changelog lists them (FR-012); `!` marks
     a change that can flag accepted code;
   - the release publishes it.
-- [ ] T026 Run `/conventions:verify-app all` and `pnpm check` from the root, with zero errors and
+- [X] T026 Run `/conventions:verify-app all` and `pnpm check` from the root, with zero errors and
   zero warnings. Run the private-name grep from spec 1 (the forbidden word list in the
   maintainer's notes) on `packages/arch-rules`, with zero hits. The word list stays outside the
   repository: never write it into a file, test, script or commit here.
