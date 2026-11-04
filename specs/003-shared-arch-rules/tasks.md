@@ -126,9 +126,9 @@ resolution path, and a missing fixture fails `check`.
 **Independent Test**: delete one compliant fixture of `ARCH-REEXPORT`. The package test fails
 and names it. Restore it, and the test passes (quickstart §1).
 
-- [ ] T012 [P] [US2] Copy `apps/web/tests/architecture/rule-ids.ts` to
+- [X] T012 [P] [US2] Copy `apps/web/tests/architecture/rule-ids.ts` to
   `packages/arch-rules/src/rule-ids.ts`, keeping `findRulesWithoutBothFixtures` and the id list.
-- [ ] T013 [US2] Create `packages/arch-rules/tests/rules.test.ts` from
+- [X] T013 [US2] Create `packages/arch-rules/tests/rules.test.ts` from
   `apps/web/tests/architecture/rules.test.ts`, with two changes:
   - **Temporary consumer.** Each fixture is written into a `mkdtemp` consumer that contains a
     `biome.jsonc` (`{"root":true,"extends":["@azurioh/arch-rules/biome"]}`) and a
@@ -139,7 +139,7 @@ and names it. Restore it, and the test passes (quickstart §1).
     assumed (FR-003).
 
   Keep every existing fixture and the completeness assertion.
-- [ ] T014 [US2] In `packages/arch-rules/tests/rules.test.ts`, add one fixture per `ARCH-*` id
+- [X] T014 [US2] In `packages/arch-rules/tests/rules.test.ts`, add one fixture per `ARCH-*` id
   under a second app path (`apps/other/src`), proving that the globs match any app.
 - [ ] T015 [US2] Add a test asserting that the packed tarball holds exactly the published file
   set: `npm pack --dry-run --json` lists `dist/cli.js`, `preset.jsonc`, `biome-manifest.jsonc`,
