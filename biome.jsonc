@@ -15,7 +15,8 @@
       "!!pnpm-lock.yaml",
       // Generated from CLAUDE.md and .claude/rules by the conventions plugin.
       "!!AGENTS.md",
-      "!!**/routeTree.gen.ts"
+      "!!**/routeTree.gen.ts",
+      "!!packages/arch-rules/dist"
     ]
   },
   "css": {

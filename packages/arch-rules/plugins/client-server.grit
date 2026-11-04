@@ -1,0 +1,16 @@
+language js
+
+// ARCH-CLIENT-SERVER: client code (a feature's client/ and index.ts, src/shared/client/) imports
+// server code type-only, with a top-level `import type`. Start import protection in
+// vite.config.ts is the build-time backstop.
+or {
+  `import $clause from $source` as $statement where { not $statement <: r"(?s)import\s+type\s.*" },
+  `import $source` as $statement,
+  `export * from $source` as $statement,
+  `export * as $namespace from $source` as $statement,
+  `export { $names } from $source` as $statement
+} where {
+  $filename <: r".*/apps/[^/]+/src/(?:features/[^/]+/(?:client/.*|index\.tsx?)|shared/client/.*)",
+  $source <: r"['\"]@/(?:features/[^/'\"]+/server|shared/server)(?:/[^'\"]*)?['\"]",
+  register_diagnostic(span=$statement, message="ARCH-CLIENT-SERVER: client code imports server code with `import type` only.", severity="error")
+}

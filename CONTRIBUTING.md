@@ -64,6 +64,22 @@ is `0.1.0`), a breaking change produces a minor release instead of a major one; 
 behave as above. Leaving `0.x` is a deliberate step (see
 [ADR 0005](./docs/adr/0005-dependency-versioning-and-releases.md)).
 
+### Architecture rule changes
+
+A change to the architecture rules (`ARCH-*` lint rules, layout check, agent rules) happens in
+`packages/arch-rules`, published as `@azurioh/arch-rules`. Its commit uses the scope `arch-rules`
+and names the affected rule ids in the subject, so the changelog lists them; `!` marks a change
+that can flag code the previous version accepted (a major release):
+
+```text
+feat(arch-rules)!: ARCH-LAYER rejects rpc imports from client code
+fix(arch-rules): ARCH-VENDOR no longer flags type-only imports
+```
+
+The release publishes the package to npm, and projects receive it as a dependency update. See
+[ADR 0012](./docs/adr/0012-shared-architecture-rules-package.md) and the
+[package README](./packages/arch-rules/README.md#versioning).
+
 ## Dependencies
 
 - Add dependencies with the package manager, never by editing `package.json`:
@@ -88,8 +104,8 @@ feature branch --squash--> staging --merge commit--> demo --merge commit--> main
   updates `CHANGELOG.md` (root) and `apps/web/CHANGELOG.md` (the app, released separately as
   `web`). Never edit a changelog by hand.
 - After each release, the release workflow opens a `chore: back-merge main into staging` pull
-  request and enables auto-merge (squash) on it, so the release commit reaches `staging` without a
-  manual step.
+  request with auto-merge (squash) and a `chore: back-merge main into demo` pull request with
+  auto-merge (merge commit), so the release commit reaches both branches without a manual step.
 
 The full rationale is in [ADR 0006](./docs/adr/0006-branch-flow-and-repository-rules.md).
 

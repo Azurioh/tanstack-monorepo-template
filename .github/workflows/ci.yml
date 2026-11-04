@@ -24,6 +24,7 @@ jobs:
   check:
     name: check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -38,6 +39,7 @@ jobs:
     name: pr-title
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       pull-requests: read
     steps:
@@ -49,6 +51,7 @@ jobs:
   e2e:
     name: e2e
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -57,8 +60,11 @@ jobs:
         uses: ./.github/actions/setup
 
       # Browser binaries are not cached: Playwright's CI guide notes that restoring them takes as
-      # long as downloading them, and the system dependencies cannot be cached anyway.
+      # long as downloading them, and the system dependencies cannot be cached anyway. The step
+      # normally takes under a minute; the timeout stops a stalled apt mirror from holding the
+      # runner until the job limit.
       - name: Install Playwright browser
+        timeout-minutes: 10
         run: pnpm --filter web exec playwright install --with-deps chromium
 
       # test:e2e depends on build (turbo.json); Playwright serves the production build. The
@@ -79,6 +85,7 @@ jobs:
   agents-md:
     name: agents-md
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     env:
       # claude-conventions has no release tag yet, so neither Dependabot nor any tag tracks this
       # ref: bump it by hand (.claude/rules/workflow.md).

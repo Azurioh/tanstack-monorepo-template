@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "plugins": {
+    "rules": [
+      { "feature-boundaries": "./plugins/feature-boundaries.grit" },
+      { "client-server": "./plugins/client-server.grit" },
+      { "no-passthrough-reexports": "./plugins/no-passthrough-reexports.grit" },
+      { "vendor-sdks": "./plugins/vendor-sdks.grit" }
+    ]
+  }
+}

@@ -30,8 +30,8 @@ of being created.
   [CI](#ci)).
 - **Releases**: release-please (manifest mode) opens release pull requests with a generated
   changelog on `main`, starting at `0.1.0`, with a separate version and changelog for
-  `apps/web` (`apps/web/CHANGELOG.md`); after each release, `main` is back-merged into `staging`
-  automatically.
+  `apps/web` (`apps/web/CHANGELOG.md`) and for `packages/arch-rules`, published to npm by CI;
+  after each release, `main` is back-merged into `staging` and `demo` automatically.
 - **Dependency updates**: Dependabot, grouped and targeting `staging`, with exact version pins.
 - **Repository rules as code**: rulesets for `staging`, `demo` and `main` in `.github/rulesets/`,
   applied with one script along with merge settings, description, topics and private
@@ -182,6 +182,12 @@ names it (`ARCH-LAYER`, `ARCH-FEATURE`, …); see
 [ADR 0010](./docs/adr/0010-app-layout-and-architecture-enforcement.md). The rules match paths,
 never feature names, so a new feature needs no configuration change.
 
+The rules are maintained in `packages/arch-rules`, published as `@azurioh/arch-rules`
+([ADR 0012](./docs/adr/0012-shared-architecture-rules-package.md)): a rule change happens there,
+uses the commit scope `arch-rules` with the rule ids in the subject (see
+[CONTRIBUTING](./CONTRIBUTING.md#architecture-rule-changes)), and reaches projects when the
+release publishes it. Adoption and project rules: [its README](./packages/arch-rules/README.md).
+
 ### Add a feature by copying the demo
 
 The steps below create `farewell`; replace the name with yours.
@@ -306,8 +312,9 @@ gitGraph
   administrators too.
 - Merging requires the `check`, `pr-title`, `e2e` and `agents-md` status checks to pass (see
   [CI](#ci)).
-- After each release, the release workflow opens `chore: back-merge main into staging` and lets it
-  merge itself (squash) once the checks pass, so the release commit reaches `staging`.
+- After each release, the release workflow opens `chore: back-merge main into staging` (squash) and
+  `chore: back-merge main into demo` (merge commit) and lets them merge themselves once the checks
+  pass, so the release commit reaches `staging` and `main` stays an ancestor of `demo`.
 
 ## CI
 
