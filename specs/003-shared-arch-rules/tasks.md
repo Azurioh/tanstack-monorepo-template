@@ -169,7 +169,7 @@ template-side run happens in phase 8.
     project-owned.
   - **Rename-only change**: the note "a new rule updates biome.jsonc, the fixtures…" becomes "a
     new rule is added in `@azurioh/arch-rules` (preset, fixtures, README rules table)".
-- [ ] T018 [US3] Create `packages/arch-rules/src/agent-rules.ts` with pure functions, no I/O:
+- [X] T018 [US3] Create `packages/arch-rules/src/agent-rules.ts` with pure functions, no I/O:
   - `managedHeader(version: string): string`, which returns
     `<!-- managed by @azurioh/arch-rules@<version>: edit upstream, run arch-rules sync -->`.
   - `isManaged(firstLine: string): boolean`.
