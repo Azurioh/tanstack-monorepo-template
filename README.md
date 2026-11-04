@@ -30,8 +30,8 @@ of being created.
   [CI](#ci)).
 - **Releases**: release-please (manifest mode) opens release pull requests with a generated
   changelog on `main`, starting at `0.1.0`, with a separate version and changelog for
-  `apps/web` (`apps/web/CHANGELOG.md`); after each release, `main` is back-merged into `staging`
-  and `demo` automatically.
+  `apps/web` (`apps/web/CHANGELOG.md`) and for `packages/arch-rules`, published to npm by CI;
+  after each release, `main` is back-merged into `staging` and `demo` automatically.
 - **Dependency updates**: Dependabot, grouped and targeting `staging`, with exact version pins.
 - **Repository rules as code**: rulesets for `staging`, `demo` and `main` in `.github/rulesets/`,
   applied with one script along with merge settings, description, topics and private
@@ -181,6 +181,12 @@ code imports server code type-only, vendor SDKs live in `server/infrastructure/`
 names it (`ARCH-LAYER`, `ARCH-FEATURE`, …); see
 [ADR 0010](./docs/adr/0010-app-layout-and-architecture-enforcement.md). The rules match paths,
 never feature names, so a new feature needs no configuration change.
+
+The rules are maintained in `packages/arch-rules`, published as `@azurioh/arch-rules`
+([ADR 0012](./docs/adr/0012-shared-architecture-rules-package.md)): a rule change happens there,
+uses the commit scope `arch-rules` with the rule ids in the subject (see
+[CONTRIBUTING](./CONTRIBUTING.md#architecture-rule-changes)), and reaches projects when the
+release publishes it. Adoption and project rules: [its README](./packages/arch-rules/README.md).
 
 ### Add a feature by copying the demo
 

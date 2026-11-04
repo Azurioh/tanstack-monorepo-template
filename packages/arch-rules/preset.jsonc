@@ -1,7 +1,7 @@
 {
-  // Shared architecture preset (ADR 0010), consumed via `"extends": ["@azurioh/arch-rules/biome"]`.
+  // Shared architecture preset, consumed via `"extends": ["@azurioh/arch-rules/biome"]`.
   // Never name this file biome.jsonc: Biome would read it as a nested root configuration.
-  // Architecture rules (ADR 0010, ids in specs/002-starter-app/contracts/architecture-rules.md).
+  // Rule ids, what each forbids and where it applies: the Rules table of this package's README.md.
   // GritQL plugins cover what noRestrictedImports cannot express; scoped by path, never by feature.
   "plugins": [
     {
