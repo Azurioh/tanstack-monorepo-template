@@ -1,8 +1,8 @@
 # 0010. App layout and architecture enforcement
 
-**Status**: Accepted
+**Status**: Accepted (amended 2026-11-04)
 **Date**: 2026-10-29
-**Applies to**: `apps/*`, root `biome.jsonc`, `scripts/biome/`
+**Applies to**: `apps/*`, root `biome.jsonc`, `@azurioh/arch-rules`
 
 ## Context
 
@@ -40,16 +40,16 @@ a configuration file, and a second app must inherit them too.
     GritQL `no-passthrough-reexports.grit`.
   - `ARCH-RELATIVE`: no parent-relative import (`../`, `..`) inside an app. `noRestrictedImports`
     pattern `["../**", ".."]`.
-  - `ARCH-LAYOUT`: the feature layout above, no missing or extra entry. Vitest
-    `apps/web/tests/architecture/layout.test.ts`.
+  - `ARCH-LAYOUT`: the feature layout above, no missing or extra entry. `arch-rules layout`
+    (originally a Vitest test, see Amendments).
 
 - **Rules match paths, never feature names.** Overrides and plugin scopes use
   `apps/*/src/features/*/…`; the GritQL plugins capture the feature from `$filename`. A copied
   feature or a second app is covered without configuration changes.
-- **The vendor list lives in one place**: the regex of `scripts/biome/vendor-sdks.grit`. A package
-  is added there when an adapter starts using it.
-- **Rules are tested.** `apps/web/tests/architecture/rules.test.ts` copies `biome.jsonc` and
-  `scripts/biome/` into a temporary directory, writes each violating and compliant snippet at its
+- **The vendor list lives in one place**: the regex of the package's `plugins/vendor-sdks.grit`. A
+  package is added there when an adapter starts using it.
+- **Rules are tested.** The package's fixture test copies the Biome preset and its GritQL plugins
+  into a temporary directory, writes each violating and compliant snippet at its
   path, runs `biome lint` and asserts the reported ids are exactly the expected one (or none). A
   completeness assertion fails when a rule id lacks a violating or a compliant fixture.
 
@@ -75,5 +75,15 @@ a configuration file, and a second app must inherit them too.
   server data goes through a feature's RPC procedures, never through `shared/server`.
 - Tests under `apps/*/tests/` are out of scope of the import rules: unit tests import the layer they
   test directly.
-- Adding a layer or a feature entry means updating `biome.jsonc`, the layout test and this ADR in
-  the same pull request.
+- Adding a layer or a feature entry means updating `@azurioh/arch-rules` (preset, layout check,
+  fixtures) and this ADR in the same pull request.
+
+## Amendments
+
+### 2026-11-04: enforcement moved to `@azurioh/arch-rules`
+
+Enforcement moved to `@azurioh/arch-rules`, [ADR 0012](./0012-shared-architecture-rules-package.md).
+The rules above are unchanged. The Biome overrides and GritQL plugins once under `scripts/biome/`
+ship in the package's preset, which the root `biome.jsonc` extends; the layout check and the rule
+fixtures once under `apps/web/tests/architecture/` run inside the package (`arch-rules layout`,
+its fixture tests); `pnpm check` runs `arch-rules check` and `arch-rules layout`.

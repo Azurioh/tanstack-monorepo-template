@@ -186,7 +186,10 @@ The rules are maintained in `packages/arch-rules`, published as `@azurioh/arch-r
 ([ADR 0012](./docs/adr/0012-shared-architecture-rules-package.md)): a rule change happens there,
 uses the commit scope `arch-rules` with the rule ids in the subject (see
 [CONTRIBUTING](./CONTRIBUTING.md#architecture-rule-changes)), and reaches projects when the
-release publishes it. Adoption and project rules: [its README](./packages/arch-rules/README.md).
+release publishes it. This template consumes the published package like any other project: the
+root `biome.jsonc` extends its preset, `pnpm check` runs `arch-rules check` and
+`arch-rules layout`, and `pnpm exec arch-rules sync` writes the agent rules to
+`.claude/rules/arch-rules/`. Adoption and project rules: [its README](./packages/arch-rules/README.md).
 
 ### Add a feature by copying the demo
 
@@ -247,7 +250,7 @@ The steps below create `farewell`; replace the name with yours.
    ```
 
    `pnpm --filter web dev` regenerates the route tree too. No file under `biome.jsonc`,
-   `knip.json`, `scripts/biome/`, `vite.config.ts` or `vitest.config.ts` changes. Then replace the
+   `knip.json`, `vite.config.ts` or `vitest.config.ts` changes. Then replace the
    copied logic, copy and tests with the feature's own, and add its end-to-end test under
    `apps/web/tests/e2e/`.
 

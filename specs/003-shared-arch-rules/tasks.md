@@ -332,20 +332,20 @@ copies, and everything is green.
     Keep the marker blocks, the Test layout table and the accepted-global bullet, plus one line
     pointing to `arch-rules/`.
   - Regenerate `AGENTS.md` with the pinned conventions script.
-- [ ] T036 [US1] Update the references to the moved files:
+- [X] T036 [US1] Update the references to the moved files:
   - `.claude/rules/workflow.md`, line "Layer mapping and wiring → …", which now points to
     `arch-rules/*.md`;
   - `CLAUDE.md`, if it names them;
   - ADR 0010, amended with a dated note "Enforcement moved to `@azurioh/arch-rules`, ADR 0012"
     that keeps its rules;
   - `docs/adr/README.md`.
-- [ ] T037 [US4] Edit `.github/dependabot.yml`:
+- [X] T037 [US4] Edit `.github/dependabot.yml`:
   - the npm entry's `schedule.interval` changes from `weekly` to `daily`;
   - a group `arch-rules` with pattern `@azurioh/arch-rules` is added as the first group.
 
   In the same PR, remove `"release-as": "1.0.0"` from the `packages/arch-rules` entry of
   `release-please-config.json`. If it stays, every later release is forced back to 1.0.0.
-- [ ] T038 [US1] Run quickstart §2, §3, §4 and §5 by hand on the branch, plus `pnpm check`, with
+- [X] T038 [US1] Run quickstart §2, §3, §4 and §5 by hand on the branch, plus `pnpm check`, with
   zero warnings. Time `arch-rules check` and `arch-rules layout` (`time`, wall clock) and record
   both durations with the outcome in the PR body.
 

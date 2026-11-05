@@ -4,11 +4,14 @@ updates:
     directory: /
     target-branch: staging
     schedule:
-      interval: weekly
+      interval: daily
     versioning-strategy: increase
     commit-message:
       prefix: chore(deps)
     groups:
+      arch-rules:
+        patterns:
+          - "@azurioh/arch-rules"
       tanstack:
         patterns:
           - "@tanstack/*"
