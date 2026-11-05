@@ -16,8 +16,11 @@
       "dependsOn": ["^build"]
     },
     "test": {
+      "dependsOn": ["^build"]
+    },
+    "web#test": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/biome.jsonc", "$TURBO_ROOT$/scripts/biome/**"]
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/biome.jsonc", "$TURBO_ROOT$/pnpm-lock.yaml"]
     },
     "@azurioh/arch-rules#test": {
       "dependsOn": ["^build", "build"],

@@ -7,6 +7,7 @@
     "node": ">=24.22.1"
   },
   "devDependencies": {
+    "@azurioh/arch-rules": "1.0.0",
     "@biomejs/biome": "2.6.3",
     "@commitlint/cli": "21.2.4",
     "@commitlint/config-conventional": "21.2.4",

@@ -283,13 +283,13 @@ copies, and everything is green.
 
 ## Phase 7: Maintainer checkpoint — first release (no code)
 
-- [ ] T027 Maintainer confirms that the npm scope `@azurioh` is theirs (`npm whoami`). If it is
+- [X] T027 Maintainer confirms that the npm scope `@azurioh` is theirs (`npm whoami`). If it is
   not, rename the package before T028; the rename touches only `package.json` `name`, the
   README, ADR 0012 and these tasks.
-- [ ] T028 Maintainer promotes `staging → demo → main` (merge commits) and merges the release PR,
+- [X] T028 Maintainer promotes `staging → demo → main` (merge commits) and merges the release PR,
   which creates tag `arch-rules-v1.0.0`. The `publish-arch-rules` job is expected to skip its
   publish with a notice at this point, because the package does not exist on npm yet.
-- [ ] T029 Maintainer publishes by hand from the tag:
+- [X] T029 Maintainer publishes by hand from the tag:
   `git switch --detach arch-rules-v1.0.0 && pnpm install --frozen-lockfile && pnpm --filter @azurioh/arch-rules build && cd packages/arch-rules && pnpm pack && npm publish ./azurioh-arch-rules-1.0.0.tgz --access public`.
   Then they register `Azurioh/tanstack-monorepo-template` + `release-please.yml` as the trusted
   publisher on npmjs.com. Verify that `npm view @azurioh/arch-rules version` shows `1.0.0`.
@@ -303,20 +303,20 @@ copies, and everything is green.
 
 **Independent Test**: quickstart §2, §3 and §5. SC-003 and SC-005 hold.
 
-- [ ] T030 [US1] Root: `pnpm add -E -D @azurioh/arch-rules@1.0.0`.
+- [X] T030 [US1] Root: `pnpm add -E -D @azurioh/arch-rules@1.0.0`.
   - Run `pnpm why @azurioh/arch-rules`. It must resolve from the registry, not as `link:`.
   - If it resolves as a link, set `link-workspace-packages: false` in `pnpm-workspace.yaml` and
     re-install.
-- [ ] T031 [US1] Rewrite the root `biome.jsonc`:
+- [X] T031 [US1] Rewrite the root `biome.jsonc`:
   - **Add**: `"extends": ["@azurioh/arch-rules/biome"]`.
   - **Remove**: the 4 `plugins` entries and the 12 `ARCH-*` `overrides`.
   - **Keep**: `$schema`, `root`, `files` (also ignoring `.claude/rules/arch-rules`), `css`, `formatter`, `linter.rules.recommended` + `useBlockStatements`, and
     `assist`.
-- [ ] T032 [US1] Delete `scripts/biome/` and
+- [X] T032 [US1] Delete `scripts/biome/` and
   `apps/web/tests/architecture/{rules.test.ts,rule-ids.ts,layout.test.ts,feature-layout.ts}`.
   Remove the `scripts/biome/**` and `biome.jsonc` fixture inputs from `turbo.json`, and any
   `knip.json` entry that names them.
-- [ ] T033 [US1] Create `apps/web/tests/architecture/arch-ids.test.ts` (parity, SC-005):
+- [X] T033 [US1] Create `apps/web/tests/architecture/arch-ids.test.ts` (parity, SC-005):
   - For each of the 6 lint ids, write one violating file at its real path under `apps/web/src`
     in a `mkdtemp` copy that has the template's `biome.jsonc` and a resolvable
     `node_modules/@azurioh/arch-rules`.
