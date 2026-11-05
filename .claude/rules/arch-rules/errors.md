@@ -1,3 +1,4 @@
+<!-- managed by @azurioh/arch-rules@1.0.0: edit upstream, run arch-rules sync -->
 # Errors and logging (every app and package)
 
 - **No silent error.** A caught error is handled (the code continues with a stated fallback) or

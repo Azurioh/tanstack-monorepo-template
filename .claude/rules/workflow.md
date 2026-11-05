@@ -92,8 +92,9 @@
   (see `knowledge.md`).
 <!-- conventions:end workflow.verification -->
 
-- Layer mapping and wiring → `clean-architecture.md`; error taxonomy and logging →
-  `errors.md`; UI components, forms and tap targets → `ui.md`.
+- Layer mapping and wiring → `arch-rules/clean-architecture.md`; error taxonomy and logging →
+  `arch-rules/errors.md`; UI components, forms and tap targets → `arch-rules/ui.md`; app layout
+  and `ARCH-*` lint rules → `arch-rules/arch-enforcement.md`.
 
 <!-- conventions:begin workflow.agents-md -->
 ## AGENTS.md (Codex)

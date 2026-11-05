@@ -20,12 +20,13 @@
     "typescript": "7.0.2"
   },
   "scripts": {
-    "check": "turbo run lint typecheck test knip build",
+    "check": "turbo run lint typecheck test knip build arch",
     "lint": "biome ci --error-on-warnings .",
     "format": "biome check --write .",
     "typecheck": "tsc --noEmit",
     "knip": "knip",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install",
+    "arch": "arch-rules check && arch-rules layout"
   },
   "version": "0.3.0"
 }
