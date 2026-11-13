@@ -242,6 +242,9 @@ Format: `- YYYY-MM-DD — symptom → cause → fix`. See `knowledge.md` for whe
   → the release commit reached `staging` only squashed, so `main` was never an ancestor of `demo`
   → the release workflow also back-merges `main → demo` with a merge commit (ADR 0006); if it did
   not run, merge `main` into `demo` through a `chore: merge main into demo` PR.
+- 2026-11-13 — the client shows "reference unknown" although the server logged one → the id was
+  put in the error message or read as `error.referenceId`; Start keeps only `message` of an error
+  thrown in a loader → read it from validated oRPC `error.data` (`greet-failure.ts`), never text.
 
 ## .claude/rules/workflow.md
 

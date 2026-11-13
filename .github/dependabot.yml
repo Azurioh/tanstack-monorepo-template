@@ -12,9 +12,15 @@ updates:
       arch-rules:
         patterns:
           - "@azurioh/arch-rules"
+        update-types:
+          - minor
+          - patch
       tanstack:
         patterns:
           - "@tanstack/*"
+        update-types:
+          - minor
+          - patch
       tooling:
         patterns:
           - "@biomejs/biome"
@@ -24,9 +30,15 @@ updates:
           - "@commitlint/*"
           - typescript
           - vitest
+        update-types:
+          - minor
+          - patch
       types:
         patterns:
           - "@types/*"
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: github-actions
     directory: /
@@ -39,3 +51,6 @@ updates:
       actions:
         patterns:
           - "*"
+        update-types:
+          - minor
+          - patch
