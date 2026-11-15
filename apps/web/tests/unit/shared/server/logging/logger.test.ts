@@ -87,6 +87,82 @@ describe("createLogger", () => {
     });
   });
 
+  it("adds no cause key to an error without a cause", () => {
+    const { logger, entries } = setup("info");
+
+    logger.error("Unexpected error", { error: new Error("boom") });
+
+    expect(entries()[0]?.error).not.toHaveProperty("cause");
+  });
+
+  it("serializes the cause chain of an error, recursively", () => {
+    const { logger, entries } = setup("info");
+    const root = new TypeError("socket closed");
+    const middle = new Error("query failed", { cause: root });
+
+    logger.error("Unexpected error", { error: new Error("save failed", { cause: middle }) });
+
+    expect(entries()[0]?.error).toEqual({
+      name: "Error",
+      message: "save failed",
+      stack: expect.stringContaining("Error: save failed"),
+      cause: {
+        name: "Error",
+        message: "query failed",
+        stack: expect.stringContaining("Error: query failed"),
+        cause: {
+          name: "TypeError",
+          message: "socket closed",
+          stack: expect.stringContaining("TypeError: socket closed"),
+        },
+      },
+    });
+  });
+
+  it("keeps a non-Error cause and redacts its secret-looking fields", () => {
+    const { logger, entries } = setup("info");
+
+    logger.error("Unexpected error", {
+      error: new Error("call failed", { cause: { status: 401, apiKey: "k-123" } }),
+      other: new Error("parse failed", { cause: "unexpected token" }),
+    });
+
+    expect(JSON.stringify(entries())).not.toContain("k-123");
+    expect(entries()[0]).toMatchObject({
+      error: { cause: { status: 401, apiKey: "[REDACTED]" } },
+      other: { cause: "unexpected token" },
+    });
+  });
+
+  it("truncates a cyclic cause chain with a marker", () => {
+    const { logger, entries } = setup("info");
+    const first = new Error("first");
+    const second = new Error("second", { cause: first });
+    first.cause = second;
+
+    logger.error("Unexpected error", { error: first });
+
+    let node: unknown = entries()[0]?.error;
+    while (typeof node === "object" && node !== null && "cause" in node) {
+      node = node.cause;
+    }
+    expect(node).toBe("[Truncated]");
+  });
+
+  it("truncates a cause chain deeper than the limit with the same marker", () => {
+    const { logger, entries } = setup("info");
+    const chain = Array.from({ length: 20 }).reduce<Error>(
+      (cause, _, index) => new Error(`level ${index}`, { cause }),
+      new Error("root"),
+    );
+
+    logger.error("Unexpected error", { error: chain });
+
+    const serialized = JSON.stringify(entries()[0]?.error);
+    expect(serialized).toContain('"cause":"[Truncated]"');
+    expect(serialized).not.toContain('"message":"root"');
+  });
+
   it("keeps the reserved keys when fields try to override them", () => {
     const { logger, entries } = setup("info");
 
