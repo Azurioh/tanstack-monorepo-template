@@ -17,19 +17,36 @@ export interface Logger {
 
 const SECRET_FIELD = /pass(?:word)?|secret|token|authorization|cookie|api[-_]?key/i;
 const REDACTED = "[REDACTED]";
+// Bounds the cause chain so a cyclic chain (a.cause = b, b.cause = a) still terminates.
+const MAX_CAUSE_DEPTH = 5;
+const TRUNCATED = "[Truncated]";
 
-function sanitize(value: unknown): unknown {
+function sanitizeError(params: { error: Error; causeDepth: number }): Record<string, unknown> {
+  const { error, causeDepth } = params;
+  const serialized = { name: error.name, message: error.message, stack: error.stack };
+  if (error.cause === undefined) {
+    return serialized;
+  }
+  const cause =
+    causeDepth >= MAX_CAUSE_DEPTH
+      ? TRUNCATED
+      : sanitize({ value: error.cause, causeDepth: causeDepth + 1 });
+  return { ...serialized, cause };
+}
+
+function sanitize(params: { value: unknown; causeDepth: number }): unknown {
+  const { value, causeDepth } = params;
   if (value instanceof Error) {
-    return { name: value.name, message: value.message, stack: value.stack };
+    return sanitizeError({ error: value, causeDepth });
   }
   if (Array.isArray(value)) {
-    return value.map(sanitize);
+    return value.map((item) => sanitize({ value: item, causeDepth }));
   }
   if (typeof value === "object" && value !== null) {
     return Object.fromEntries(
       Object.entries(value).map(([key, nested]) => [
         key,
-        SECRET_FIELD.test(key) ? REDACTED : sanitize(nested),
+        SECRET_FIELD.test(key) ? REDACTED : sanitize({ value: nested, causeDepth }),
       ]),
     );
   }
@@ -52,7 +69,7 @@ export function createLogger(params: {
       return;
     }
     const entry = {
-      ...(sanitize(fields) as Record<string, unknown>),
+      ...(sanitize({ value: fields, causeDepth: 0 }) as Record<string, unknown>),
       time: params.clock.now().toISOString(),
       level,
       message,
